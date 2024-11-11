@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.GraphicVariableMapper'>
+    <resultMap id="GraphicVariableResultMap" type="GraphicVariable">
+        <id column="id" property="id"/>
+        <result column="create" property="create"/>
+        <result column="setting" property="setting"/>
+        <association property="variable" javaType="Variable"
+                     column="variable_id" select="pe.mm.reception.core.mapper.VariableMapper.getById"/>
+        <association property="graphic" javaType="Graphic">
+            <id column="graphic_id" property="id"></id>
+        </association>
+        <association property="related" javaType="Variable"
+                     column="related_variable_id" select="pe.mm.reception.core.mapper.VariableMapper.getById"/>
+    </resultMap>
+
+    <resultMap id="GraphicVariableOnlyResultMap" type="GraphicVariable">
+        <id column="id" property="id"/>
+        <result column="create" property="create"/>
+        <result column="setting" property="setting"/>
+        <association property="variable" javaType="Variable">
+            <id column="variable_id" property="id"></id>
+            <result column="variable_name" property="name"/>
+            <association property="device" javaType="Device">
+                <id column="device_id" property="id"/>
+                <association property="location" javaType="Location">
+                    <id column="location_id" property="id"/>
+                    <association property="line" javaType="Line">
+                        <id column="line_id" property="id"/>
+                    </association>
+                </association>
+            </association>
+        </association>
+        <association property="graphic" javaType="Graphic">
+            <id column="graphic_id" property="id"></id>
+        </association>
+        <association property="related" javaType="Variable">
+            <id column="related_variable_id" property="id"></id>
+            <result column="related_variable_name" property="name"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="ValueResultMap" type="Value">
+        <result column="x" javaType="Object" property="x"></result>
+        <result column="y" javaType="String" property="y"></result>
+        <result column="value" javaType="String" property="value"></result>
+    </resultMap>
+
+    <sql id="groupByFormatOrMinutes">
+        <choose>
+            <when test="type==1">
+                GROUP by UNIX_TIMESTAMP(DATE_ADD(data.`create`, INTERVAL ${time_zone_diff} second )) DIV (${group}*60)
+            </when>
+            <otherwise>
+                GROUP by DATE_FORMAT(DATE_ADD(data.`create`, INTERVAL ${time_zone_diff} second ), '${group}')
+            </otherwise>
+        </choose>
+    </sql>
+
+    <select id="getDataOperation" resultMap="ValueResultMap">
+        SELECT min(`create`) as x, ${operation}(`${variable_id}`) as y
+        FROM `${table_name}` data
+        where unix_timestamp(data.`create`) >= unix_timestamp(cast(#{start_date} as datetime))
+          and unix_timestamp(cast(#{end_date} as datetime)) >unix_timestamp(data.`create`)
+        <include refid="groupByFormatOrMinutes"></include>
+         order by `create`;
+    </select>
+
+    <select id="getDataOperationByTariffStruct" resultMap="ValueResultMap">
+        select min(data.`create`) as x, ${operation}(`${variable_id}`) as y,
+        inde.`${tariff_structure_id}` as value from ${table_name} as data
+        inner join ${table_index_name} as inde on data.
+        <choose>
+            <when test='table_name.contains("m")'>data_index_id</when>
+            <otherwise>id</otherwise>
+        </choose>
+        = inde.data_id
+        inner join tariff_structure_plant on tariff_structure_plant.plant_id = #{plant_id}
+            and tariff_structure_plant.tariff_id = #{tariff_structure_id}
+        inner join tariff_structure on tariff_structure_plant.tariff_id = tariff_structure.id
+        inner join rate_period on inde.`${tariff_structure_id}` = rate_period.id
+        and rate_period.deleted = 0
+        and rate_period.tariff_structure_id = #{tariff_structure_id}
+        where unix_timestamp(data.`create`) >= unix_timestamp(cast(#{start_date} as datetime))
+        and unix_timestamp(cast(#{end_date} as datetime)) >unix_timestamp(data.`create`)
+        <include refid="groupByFormatOrMinutes"></include>
+        , inde.`${tariff_structure_id}`
+        order by data.`create`;
+    </select>
+
+    <select id="getDataOperationByTurn" resultMap="ValueResultMap">
+        select min(data.`create`) as x, ${operation}(`${variable_id}`) as y,
+        inde.`turn` as value from ${table_name} as data
+        inner join ${table_index_name} as inde on
+        <choose>
+            <when test='table_name.contains("m")'>data.data_index_id</when>
+            <otherwise>data.id</otherwise>
+        </choose>
+        = inde.data_id
+        and inde.turn = ${turn_id}
+        where unix_timestamp(data.`create`) >= unix_timestamp(cast(#{start_date} as datetime))
+        and unix_timestamp(cast(#{end_date} as datetime)) >unix_timestamp(data.`create`)
+        <include refid="groupByFormatOrMinutes"></include>
+        order by data.`create`;
+    </select>
+
+    <select id="getDataOperationByRatePeriod" resultType="Value">
+        SELECT min(data.`create`) x,
+        ${operation}(data.`${variable_id}` ) as y
+        FROM `${table_name}` data inner join `${table_index_name}` period
+        on period.${tariff_id} = #{rate_period_id}
+        AND data.
+        <choose>
+            <when test='table_name.contains("m")'>data_index_id</when>
+            <otherwise>id</otherwise>
+        </choose>
+        = period.data_id
+        where unix_timestamp(data.`create`) >= unix_timestamp(cast(#{start_date} as datetime))
+        and unix_timestamp(cast(#{end_date} as datetime)) >unix_timestamp(data.`create`)
+        <include refid="groupByFormatOrMinutes"></include>
+        order by `create`;
+    </select>
+
+    <select id="getIndexByDates" resultType="Value">
+        SELECT
+            index1.`${index}` AS x,
+            index1.data_id    AS y
+        FROM ${table_index_name} index1
+            INNER JOIN ${table_name} datas ON index1.data_id = datas.
+        <choose>
+          <when test='table_name.contains("m")'>data_index_id</when>
+          <otherwise>id</otherwise>
+        </choose>
+        WHERE unix_timestamp(`create`) >= unix_timestamp(cast(#{start_date} as datetime))
+            AND unix_timestamp(cast(#{end_date} as datetime)) >unix_timestamp(`create`)
+        ORDER BY `create`;
+    </select>
+
+    <select id="getIndexByTariffStructureDates" resultType="Value">
+        SELECT
+            index1.`${index}` AS x,
+            index1.data_id    AS y,
+            index1.`${tariff_structure_id}` as value
+        FROM ${table_index_name} index1
+            INNER JOIN ${table_name} datas ON index1.data_id = datas.
+        <choose>
+          <when test='table_name.contains("m")'>data_index_id</when>
+          <otherwise>id</otherwise>
+        </choose>
+        WHERE index1.`${tariff_structure_id}` is not NULL
+            AND unix_timestamp(`create`) >= unix_timestamp(cast(#{start_date} as datetime))
+            AND unix_timestamp(cast(#{end_date} as datetime)) >unix_timestamp(`create`)
+        ORDER BY `create`;
+    </select>
+
+    <select id="getIndexByTurnDates" resultType="Value">
+        SELECT
+        index1.`${index}` AS x,
+        index1.data_id    AS y,
+        index1.`turn`     AS value
+        FROM ${table_index_name} index1
+        INNER JOIN ${table_name} datas ON index1.data_id = datas.
+        <choose>
+            <when test='table_name.contains("m")'>data_index_id</when>
+            <otherwise>id</otherwise>
+        </choose> and index1.turn = ${turn_id}
+        WHERE unix_timestamp(`create`) >= unix_timestamp(cast(#{start_date} as datetime))
+        AND unix_timestamp(cast(#{end_date} as datetime)) >unix_timestamp(`create`)
+        ORDER BY `create`;
+    </select>
+
+    <select id="getById" resultMap="GraphicVariableResultMap">
+        SELECT id, `graphic_id`, `variable_id`, `create`, setting, `related_variable_id`
+        FROM `graphic_variable`
+        WHERE `graphic_id` = #{graphic_id}
+          AND `variable_id` = #{variable_id}
+    </select>
+
+    <select id="getAllByGraphic" resultMap="GraphicVariableOnlyResultMap">
+        SELECT graphic_variable.id, `graphic_id`, `variable_id`, graphic_variable.`create`, v1.name variable_name,
+         v1.device_id, v1.location_id, v1.line_id, setting, v2.name related_variable_name,
+         graphic_variable.related_variable_id
+        FROM `graphic_variable` inner join
+          variable v1 on variable_id =v1.id left join
+          variable v2 on related_variable_id = v2.id
+          WHERE `graphic_id` = #{graphic_id}
+    </select>
+
+
+    <insert id="insert" parameterType="GraphicVariable" statementType="PREPARED" timeout="20"
+            keyProperty="graphicVariable.id"
+            useGeneratedKeys="true"
+            keyColumn="id">
+        INSERT INTO `graphic_variable`(`graphic_id`, `variable_id`, `create`, setting, related_variable_id)
+        VALUES (#{graphicVariable.graphic.id},#{graphicVariable.variable.id},now(), #{graphicVariable.setting}, #{graphicVariable.related.id})
+    </insert>
+
+    <delete id="delete">
+        DELETE from graphic_variable
+        where graphic_id = #{graphic_id} and variable_id =#{variable_id}
+    </delete>
+
+    <!-- real time -->
+    <select id="getAllByGraphicLineOeeRealTime" resultMap="GraphicVariableOnlyResultMap">
+    SELECT graphic_variable.id, `graphic_id`, `variable_id`, graphic_variable.`create`, variable.name variable_name, setting
+        FROM `graphic_variable` inner join
+          variable on variable_id =variable.id
+        WHERE `graphic_id` = #{graphic_id} and variable.line_id=#{line_id}
+    </select>
+
+    <!-- real time get values -->
+
+</mapper>

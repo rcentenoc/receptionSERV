@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.DocumentTypeMapper'>
+    <select id="getById" resultType="pe.mm.reception.core.model.DocumentType">
+        SELECT `id`, `description`, `short_name` as `shortName`, `create`, `update`, unique_code as uniquecode
+        FROM `document_type`
+        WHERE id=#{document_type_id} and deleted = 0
+    </select>
+
+    <select id="getAll" resultType="pe.mm.reception.core.model.DocumentType">
+        SELECT `id`, `description`, `short_name` as `shortName`, `create`, `update`, unique_code as uniquecode
+        FROM `document_type` where deleted = 0
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+    <select id="getAllByField" resultType="pe.mm.reception.core.model.DocumentType">
+        SELECT `id`, `description`, `short_name` as `shortName`, `create`, `update`, unique_code as uniquecode
+        FROM `document_type`
+        WHERE ${field} = #{value} and deleted = 0
+    </select>
+    <!-- insert -->
+    <insert
+            id="insert"
+            parameterType="pe.mm.reception.core.model.DocumentType"
+            statementType="PREPARED"
+            keyProperty="document_type.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+    >
+       INSERT INTO `document_type`(`description`, `short_name`, `create`, `user_id_mod`, `unique_code`)
+       VALUES (#{document_type.description},#{document_type.shortName},now(),#{user_id}, #{document_type.uniquecode})
+    </insert>
+    <!-- update -->
+    <update id="update" parameterType="pe.mm.reception.core.model.DocumentType">
+        UPDATE `document_type`
+        SET `description`=#{document_type.description},`short_name`=#{document_type.shortName},`update`=now(),`user_id_mod`=#{user_id}
+        WHERE `id` = #{document_type.id}
+    </update>
+    <!-- delete -->
+    <delete id="delete">
+        DELETE FROM `document_type` WHERE `id` = #{document_type_id}
+    </delete>
+    <!-- delete logic -->
+    <update id="softDeleted" parameterType="pe.mm.reception.core.model.DocumentType">
+        UPDATE `document_type`
+        SET `update`=now(),`deleted`=#{deleted},`user_id_mod`=#{user_id}
+        WHERE `id` = #{document_type_id}
+    </update>
+
+
+</mapper>

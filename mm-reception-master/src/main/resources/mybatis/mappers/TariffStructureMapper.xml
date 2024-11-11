@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.TariffStructureMapper'>
+    <resultMap id="TariffResultMap" type="TariffStructure">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="country" property="country"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="periods" property="periods"/>
+    </resultMap>
+
+    <select id="getById" resultMap="TariffResultMap">
+        select id, country, `create`, name, `update`, periods from tariff_structure
+         where id = #{tariff_structure_id} and deleted =0
+    </select>
+
+    <select id="getAllByPlant" resultMap="TariffResultMap">
+        select tariff_structure.id, country, tariff_structure.`create`,
+          tariff_structure.name, tariff_structure.`update`, tariff_structure.periods
+        from tariff_structure
+          inner join tariff_structure_plant
+          on tariff_structure.id = tariff_structure_plant.tariff_id
+        where tariff_structure.deleted =0 and tariff_structure_plant.plant_id = #{plant_id}
+    </select>
+
+    <select id="getAllTariffByPlant" resultType="int">
+        select distinct tariff_structure_plant.plant_id from  tariff_structure
+		inner join tariff_structure_plant
+        on tariff_structure.id=tariff_structure_plant.tariff_id
+        where tariff_structure.id=#{tariff_structure_id} and tariff_structure.deleted =0 ;
+    </select>
+    <select id="getAllTariffPlantByPlant" resultType="pe.mm.reception.core.dto.TariffPlantDTO">
+        SELECT tariff_id,plant_id FROM tariff_structure_plant where plant_id=#{plant_id};
+    </select>
+    <select id="getAll" resultMap="TariffResultMap">
+        select id, country, `create`, name, `update`, periods
+        from tariff_structure
+        where deleted = 0
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+    <insert id="insert" statementType="PREPARED" keyProperty="tariff_structure.id"
+            useGeneratedKeys="true" timeout="20" keyColumn="id">
+        insert into tariff_structure (name, country, `create`, user_id_mod, periods)
+        VALUES (#{tariff_structure.name}, #{tariff_structure.country}, now(), #{user_id}, #{tariff_structure.periods})
+    </insert>
+
+    <update id="update">
+        UPDATE tariff_structure
+        SET name = #{tariff_structure.name}, country = #{tariff_structure.country}, `update` = now(),
+          user_id_mod = #{user_id}, periods = #{tariff_structure.periods}
+        WHERE id = #{tariff_structure.id};
+    </update>
+
+    <update id="softDeleted">
+        UPDATE tariff_structure
+        SET `deleted`=#{deleted},`user_id_mod`=#{user_id}, `update`= now()
+        WHERE id = #{tariff_structure_id};
+    </update>
+    <delete id="deletePlantOfTariffPlant">
+       DELETE FROM `tariff_structure_plant` WHERE `tariff_id`=#{tariff_id} and`plant_id`=#{plant_id};
+    </delete>
+    <insert id="insertTariffStructurehasPlant" statementType="PREPARED"  timeout="20" >
+        INSERT INTO `tariff_structure_plant` (`tariff_id`, `plant_id`) VALUES (#{idTariff},#{idPlant});
+    </insert>
+</mapper>

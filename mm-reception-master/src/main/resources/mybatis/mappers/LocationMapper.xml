@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.LocationMapper'>
+    <resultMap id="LocationResultMap" type="Location">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="address" property="address"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="line" javaType="Line" column="line_id"
+                     select="pe.mm.reception.core.mapper.LineMapper.getById"/>
+    </resultMap>
+
+    <resultMap id="LocationOnlyResultMap" type="Location">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="address" property="address"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="line" javaType="Line">
+            <id column="line_id" property="id"></id>
+        </association>
+    </resultMap>
+
+    <select id="getById" resultMap="LocationResultMap">
+        SELECT `id`, `name`, `address`, `line_id`, `create`, `update`
+        FROM `location`
+        WHERE id=#{location_id} AND deleted=0
+    </select>
+
+    <select id="getAllByLine" resultMap="LocationOnlyResultMap">
+        SELECT `id`, `name`, `address`, `line_id`, `create`, `update`
+        FROM `location`
+        WHERE line_id=#{line_id} AND deleted=0
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+    <select id="getAllByField" resultMap="LocationOnlyResultMap">
+        SELECT `id`, `name`, `address`, `line_id`, `create`, `update`
+        FROM `location`
+        WHERE line_id=#{line_id} AND ${field} = #{value} AND deleted=0
+    </select>
+
+    <!-- insert -->
+    <insert
+            id="insert"
+            parameterType="Location"
+            statementType="PREPARED"
+            keyProperty="location.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+    >
+
+        INSERT INTO `location`(`name`, `address`,`line_id`, `create`,`user_id_mod`)
+        VALUES (#{location.name},#{location.address},#{location.line.id},now(),#{user_id})
+    </insert>
+
+    <!-- update -->
+    <update id="update" parameterType="Location">
+        UPDATE `location`
+        SET `line_id`=#{location.line.id},`name`=#{location.name},`address`=#{location.address},`update`=now(),`user_id_mod`=#{user_id}
+        WHERE `id`=#{location.id}
+    </update>
+
+    <!-- deleted -->
+    <delete id="delete">
+        DELETE FROM `location` WHERE `id` = #{location_id}
+    </delete>
+
+    <!-- delete logic -->
+    <update id="softDeleted" parameterType="Location">
+        UPDATE `location`
+        SET `deleted`=#{deleted},`user_id_mod`=#{user_id}, `update` = now()
+        WHERE `id` = #{location_id}
+    </update>
+
+
+</mapper>

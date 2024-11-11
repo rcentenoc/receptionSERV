@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.UserCompanyMapper'>
+
+    <resultMap id="UserCompanyResultMap" type="UserCompany">
+        <id column="id" property="id"/>
+        <result column="comertial_name" property="comertialName"/>
+        <result column="information" property="information"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="denomination" property="denomination"/>
+        <result column="document_number" property="documentNumber"/>
+        <result column="address" property="address"/>
+        <result column="phone1" property="phone1"/>
+        <result column="phone2" property="phone2"/>
+        <result column="phone3" property="phone3"/>
+        <result column="website" property="website"/>
+        <result column="agent" property="agent"/>
+        <result column="agent_email" property="agentEmail"/>
+        <result column="agent_phone" property="agentPhone"/>
+        <result column="company_email" property="companyEmail"/>
+        <association property="documentType" javaType="DocumentType" column="document_type_id"
+                     select="pe.mm.reception.core.mapper.DocumentTypeMapper.getById"/>
+    </resultMap>
+
+    <resultMap id="UserCompanyWithImageResultMap" type="UserCompany">
+        <id column="id" property="id"/>
+        <result column="comertial_name" property="comertialName"/>
+        <result column="information" property="information"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="denomination" property="denomination"/>
+        <result column="document_number" property="documentNumber"/>
+        <result column="address" property="address"/>
+        <result column="phone1" property="phone1"/>
+        <result column="phone2" property="phone2"/>
+        <result column="phone3" property="phone3"/>
+        <result column="website" property="website"/>
+        <result column="agent" property="agent"/>
+        <result column="agent_email" property="agentEmail"/>
+        <result column="agent_phone" property="agentPhone"/>
+        <result column="company_email" property="companyEmail"/>
+        <association property="documentType" javaType="DocumentType">
+            <id column="document_type_id" property="id"></id>
+        </association>
+        <association property="image" javaType="Image" column="images_id"
+                     select="pe.mm.reception.core.mapper.ImageMapper.getById"/>
+    </resultMap>
+
+    <resultMap id="UserCompanyOnlyResultMap" type="UserCompany">
+        <id column="id" property="id"/>
+        <result column="comertial_name" property="comertialName"/>
+        <result column="information" property="information"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="denomination" property="denomination"/>
+        <result column="document_number" property="documentNumber"/>
+        <result column="address" property="address"/>
+        <result column="phone1" property="phone1"/>
+        <result column="phone2" property="phone2"/>
+        <result column="phone3" property="phone3"/>
+        <result column="website" property="website"/>
+        <result column="agent" property="agent"/>
+        <result column="agent_email" property="agentEmail"/>
+        <result column="agent_phone" property="agentPhone"/>
+        <result column="company_email" property="companyEmail"/>
+        <association property="documentType" javaType="DocumentType">
+            <id column="document_type_id" property="id"></id>
+        </association>
+    </resultMap>
+
+    <resultMap id="UserCompanyWihtUserEmailsResultMap" type="UserCompany">
+        <id column="id" property="id"/>
+        <result column="comertial_name" property="comertialName"/>
+        <collection property="users" ofType="User" javaType="ArrayList">
+            <id column="user_id" property="id"/>
+            <result column="user_name" property="name" />
+            <result column="user_email" property="email" />
+        </collection>
+    </resultMap>
+
+    <resultMap id="CompanyAllResultMap" type="CompanyBasic">
+        <id column="id" property="id"/>
+        <result column="denomination" property="denomination"/>
+        <result column="status" property="status"/>
+        <!--
+            <association property="documentType" javaType="DocumentType" column="document_type_id"
+                         select="pe.mm.configuration.core.mapper.DocumentTypeMapper.getById"/> -->
+    </resultMap>
+
+    <select id="getUserCompanyById" resultMap="UserCompanyResultMap">
+        SELECT user_company.`id`, `comertial_name`, `information`, `user_company`.`create`, `user_company`.`update`,
+            `denomination`, `document_number`, `address`, `phone1`, `phone2`, `phone3`, `website`,
+            `agent`, `agent_email`, `company_email`, `agent_phone`, `images_id`, document_type_id,status
+        FROM `user_company`
+        WHERE user_company.id=#{user_company_id} and deleted = 0
+    </select>
+
+    <select id="getUserCompanyByIdWithImage" resultMap="UserCompanyWithImageResultMap">
+        SELECT u.`id`, u.`comertial_name`, u.`information`, `u`.`create`, `u`.`update`,
+        u.`denomination`, u.`document_number`, u.`address`, u.`phone1`, u.`phone2`, u.`phone3`, u.`website`,
+        u.`agent`, u.`agent_email`, u.`company_email`, u.`agent_phone`, u.`images_id`, u.document_type_id,u.status
+        FROM `user_company` u
+        inner join images on u.images_id = images.id
+        WHERE u.id=#{user_company_id} and u.deleted = 0
+    </select>
+
+    <select id="getAll" resultMap="UserCompanyResultMap">
+        SELECT user_company.`id`, `comertial_name`, `information`, `user_company`.`create`, `user_company`.`update`,
+        `denomination`, `document_number`, `address`, `phone1`, `phone2`, `phone3`, `website`,
+        `agent`, `agent_email`, `company_email`, `agent_phone`, `images_id`, document_type_id,status
+        FROM `user_company`
+        where deleted = 0
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+    <select id="getAllByField" resultMap="UserCompanyResultMap">
+        SELECT user_company.`id`, `comertial_name`, `information`, `user_company`.`create`, `user_company`.`update`,
+            `denomination`, `document_number`, `address`, `phone1`, `phone2`, `phone3`, `website`,
+            `agent`, `agent_email`, `company_email`, `agent_phone`, `images_id`, document_type_id,status
+        FROM `user_company`
+        WHERE user_company.${field} = #{value} and deleted = 0
+    </select>
+
+    <select id="getAllByDocument" resultMap="UserCompanyResultMap">
+        SELECT user_company.`id`, `comertial_name`, `information`, `user_company`.`create`, `user_company`.`update`,
+            `denomination`, `document_number`, `address`, `phone1`, `phone2`, `phone3`, `website`,
+            `agent`, `agent_email`, `company_email`, `agent_phone`, `images_id`, document_type_id,status
+        FROM `user_company`
+        WHERE user_company.document_type_id = #{document_type_id} AND
+            user_company.document_number = #{document_number} and
+            deleted = 0
+    </select>
+
+    <select id="getUserCompanyWithUserEmails" resultMap="UserCompanyWihtUserEmailsResultMap">
+        SELECT `user_company`.`id`, `comertial_name`, user.name as user_name, user.id as user_id, user.email as user_email
+        FROM `user_company`left join user on user.id_company = user_company.id
+        WHERE user_company.id=#{user_company_id} and
+            user_company.deleted = 0 and user.deleted = 0
+    </select>
+    <!-- insert -->
+    <insert
+            id="insert"
+            parameterType="UserCompany"
+            statementType="PREPARED"
+            keyProperty="user_company.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+    >
+        INSERT INTO `user_company`(`comertial_name`, `information`, `create`, `update`, `denomination`,
+        `document_type_id`, `document_number`, `address`, `phone1`, `phone2`, `phone3`, `website`, `agent`,
+        `agent_email`, `company_email`, `agent_phone`, `images_id`,`user_id_mod`,`status`)
+        VALUES (#{user_company.comertialName},#{user_company.information},now(),NULL ,#{user_company.denomination},
+        #{user_company.documentType.id}, #{user_company.documentNumber},#{user_company.address},#{user_company.phone1},
+        #{user_company.phone2},#{user_company.phone3},#{user_company.website},#{user_company.agent},
+        #{user_company.agentEmail},#{user_company.companyEmail},#{user_company.agentPhone},#{user_company.image.id},
+        #{user_id},0)
+    </insert>
+
+    <!-- update -->
+    <update id="update" parameterType="UserCompany">
+        UPDATE `user_company`
+        SET `comertial_name`=#{user_company.comertialName},`information`=#{user_company.information},`update`=now(),
+        `denomination`=#{user_company.denomination},`document_type_id`=#{user_company.documentType.id},
+        `document_number`=#{user_company.documentNumber},`address`=#{user_company.address},
+        `phone1`=#{user_company.phone1},`phone2`=#{user_company.phone2},`phone3`=#{user_company.phone3},
+        `website`=#{user_company.website},`agent`=#{user_company.agent}, `agent_email`=#{user_company.agentEmail},
+        `company_email`=#{user_company.companyEmail},`agent_phone`=#{user_company.agentPhone},
+        `images_id`=#{user_company.image.id},`user_id_mod`=#{user_id}
+        WHERE `id`=#{user_company.id} and
+            deleted = 0
+    </update>
+    <!-- deleted -->
+    <delete id="delete">
+        DELETE FROM `user_company` WHERE `id` = #{user_company_id}
+    </delete>
+    <!-- delete logic -->
+    <update id="softDeleted" parameterType="UserCompany">
+        UPDATE `user_company`
+        SET `deleted`=#{deleted},`user_id_mod`=#{user_id}
+        WHERE `id` = #{user_company_id}
+    </update>
+
+    <update id="updateStatusCompany" parameterType="UserCompany">
+        UPDATE `user_company`
+        SET `update`=now(),`user_id_mod`=#{user_id},`status`=#{user_company.status}
+        WHERE `id` = #{user_company.id}
+    </update>
+    <!-- validation -->
+
+
+    <select id="getAllCompany" resultMap="CompanyAllResultMap">
+        SELECT user_company.`id`,status,denomination
+        FROM `user_company`
+        where deleted = 0 ;
+        <!--<include refid="pe.mm.configuration.core.mapper.PagerMapper.limit"></include>-->
+    </select>
+
+</mapper>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.PlantStatusMapper'>
+    <resultMap id="PlantStatusMap" type="PlantStatus">
+        <id column="id" property="id"/>
+        <result column="status" property="status"/>
+        <association property="plant" javaType="Plant">
+            <id column="plant_id" property="id"/>
+            <result column="plant_name" property="name"/>
+            <result column="plant_timeZone" property="timeZone"/>
+        </association>
+        <association property="user" javaType="User">
+            <id column="user_id_mod" property="id"/>
+            <result column="user_name" property="name"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="PlantStatusLogMap" type="StatusLog">
+        <id column="id" property="id"/>
+        <result column="start" property="start"/>
+        <result column="end" property="end"/>
+        <association property="plantStatus" javaType="PlantStatus">
+            <id column="plant_status_id" property="id"/>
+        </association>
+    </resultMap>
+
+    <select id="getStatusByPlant" resultMap="PlantStatusMap">
+        select plant_status.id, plant_status.status, plant_status.plant_id,
+          plant_status.user_company_id, plant_status.user_id_mod,
+          plant.name plant_name, user.name user_name, plant.time_zone plant_timeZone
+        from plant_status
+          inner join plant on plant_status.plant_id = plant.id
+          inner join user on user.id = plant_status.user_id_mod
+        where plant_id = #{plant.id};
+    </select>
+
+    <select id="getLastLog" resultMap="PlantStatusLogMap">
+        select id, plant_status_id, start, `end` from plant_status_log
+         where plant_status_id = #{plant_status.id} order by `create` desc limit 1;
+    </select>
+
+    <insert id="insertStatus"
+            statementType="PREPARED"
+            keyProperty="plant_status.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id">
+        INSERT INTO plant_status (status, plant_id, user_company_id, user_id_mod, deleted, `create`, `update`)
+         VALUE (#{plant_status.status},#{plant_status.plant.id},#{plant_status.plant.userCompany.id},
+          #{user_id}, 0, now(), NULL );
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE plant_status
+        set plant_id = #{plant_status.plant.id},
+          user_company_id = #{plant_status.plant.userCompany.id},
+          user_id_mod = #{user_id},
+          status = #{plant_status.status},
+          `update` = now()
+        where id = #{plant_status.id}
+    </update>
+
+    <insert id="insertStatusLog"
+            statementType="PREPARED"
+            keyProperty="status_log.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id">
+        INSERT INTO plant_status_log (plant_status_id, start, `end`, user_id_mod, `create`, `update`, deleted)
+        value (#{status_log.plantStatus.id},#{status_log.start}, #{status_log.end}, #{user_id}, now(), NULL, 0);
+    </insert>
+
+    <update id="updateStatusLog">
+        UPDATE  plant_status_log
+        set plant_status_id  = #{status_log.plantStatus.id},
+        start = #{status_log.start},
+        `end` = #{status_log.end},
+        user_id_mod = #{user_id},
+        `update` = now()
+        where id = #{status_log.id}
+    </update>
+
+</mapper>

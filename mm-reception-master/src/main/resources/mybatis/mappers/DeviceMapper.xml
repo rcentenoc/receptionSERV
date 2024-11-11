@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.DeviceMapper'>
+    <resultMap id="DeviceResultMap" type="Device">
+        <id column="id" property="id" />
+        <result column="unique_code" property="unique_code"/>
+        <result column="name" property="name"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="deleted" property="delete"/>
+        <result column="user_id_mod" property="user_id_mod"/>
+        <result column="latitude" property="latitude"/>
+        <result column="longitude" property="longitude"/>
+        <association property="location" javaType="Location" column="location_id"
+                     select="pe.mm.reception.core.mapper.LocationMapper.getById"/>
+    </resultMap>
+
+    <resultMap id="DeviceOnlyResultMap" type="Device">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="location" javaType="Location">
+            <id column="location_id" property="id"/>
+        </association>
+    </resultMap>
+
+    <select id="getById" resultMap="DeviceResultMap">
+        SELECT `id`, `unique_code`,`name`, `location_id`, `create`, `update`,`deleted`,`user_id_mod`,`latitude`,`longitude`
+        FROM `device`
+        WHERE id=#{device_id} and deleted=0
+    </select>
+
+    <select id="getAllByLocation" resultMap="DeviceOnlyResultMap">
+        SELECT `id`, `unique_code`,`name`, `location_id`, `create`, `update`,`deleted`,`user_id_mod`,`latitude`,`longitude`
+        FROM `device`
+        WHERE location_id=#{location_id} and deleted=0
+    </select>
+
+    <select id="getAllByField" resultMap="DeviceOnlyResultMap">
+        SELECT `id`, `unique_code`,`name`, `location_id`, `create`, `update`,`deleted`,`user_id_mod`,`latitude`,`longitude`
+        FROM `device`
+        WHERE location_id=#{location_id} AND ${field}= #{value} AND deleted=0
+    </select>
+
+    <!-- insert -->
+    <insert
+            id="insert"
+            parameterType="Device"
+            statementType="PREPARED"
+            keyProperty="device.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+    >
+
+        INSERT INTO `device`(`unique_code`,`name`, `location_id`, `create`,`user_id_mod`,`latitude`,`longitude`)
+        VALUES (#{device.unique_code},#{device.name},#{device.location.id},current_timestamp(),#{user_id},#{device.latitude},#{device.longitude})
+    </insert>
+
+    <!-- update -->
+    <update id="update" parameterType="Device">
+        UPDATE `device`
+        SET `unique_code`=#{device.unique_code},`name`=#{device.name},`location_id`=#{device.location.id},`update`=current_timestamp(),`user_id_mod`=#{user_id},`latitude`=#{device.latitude},`longitude`=#{device.longitude}
+        WHERE `id`=#{device.id}
+    </update>
+
+    <!-- delete -->
+    <delete id="delete">
+        DELETE FROM `device` WHERE `id` = #{device_id}
+    </delete>
+
+    <!-- delete logic -->
+    <update id="softDeleted" parameterType="Device">
+        UPDATE `device`
+        SET `deleted`=#{delete},`user_id_mod`=#{user_id}, `update` = now()
+        WHERE `id` = #{device_id}
+    </update>
+
+</mapper>

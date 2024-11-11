@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.ProductMapper'>
+    <resultMap id="ProductResultMap" type="Product">
+        <id column="id" property="id" />
+        <result column="description" property="description"/>
+        <result column="code" property="code"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="rated_speed" property="ratedSpeed"/>
+        <result column="measure_per_unit" property="measurePerUnit"/>
+        <association property="line" javaType="Line">
+            <id column="line_id" property="id"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="VariableMap" type="Variable">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="type" property="type"/>
+        <result column="status" property="status"/>
+        <association property="device" javaType="Device">
+            <id column="device_id" property="id"></id>
+        </association>
+    </resultMap>
+
+    <select id="getAllByLine" resultMap="ProductResultMap">
+        SELECT id, `create`, `update`, code, `description`, rated_speed, measure_per_unit,${line_id} as line_id
+        from ${table_name} where deleted = 0
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+    <select id="getAllCharacteristicsByLine" resultMap="VariableMap">
+        SELECT variable.`id`, variable.`name`, variable.`status`, variable.`unit`, variable.`short_name`, variable.`create`, variable.`update`, variable.`device_id`, `type`
+        FROM product_line_feature
+        inner join variable on product_line_feature.variable_id = variable.id
+        inner join
+        (
+        <include refid="pe.mm.reception.core.mapper.VariableMapper.sqlForType"></include>
+        ) as type_variable
+        on variable.id = type_variable.id
+        WHERE product_line_feature.line_id =#{line_id}
+    </select>
+
+
+    <update id="update" parameterType="Product">
+        UPDATE `${table_name}`
+        SET `rated_speed`=#{product.ratedSpeed},`measure_per_unit`=#{product.measurePerUnit},`update`=now(),`user_id`=#{user_id}
+        WHERE `id`=#{product.id}
+    </update>
+
+    <insert
+
+            id="insert"
+            parameterType="Product"
+            statementType="PREPARED"
+            keyProperty="product.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+
+    >
+        INSERT INTO ${table} (`create`,`user_id`,`code`,`description`,`rated_speed`,`measure_per_unit`)
+        VALUES                (now(),#{user_id},#{product.code},#{product.description},#{product.rated_speed},#{product.measure_per_unit} )
+    </insert>
+
+
+    <insert
+            id="insertByFeature"
+            statementType="PREPARED"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+    >
+        INSERT INTO `product_line_feature`(`line_id`, `variable_id`, `create`,`user_id`)
+        VALUES (#{line_id},#{variable_id},now(),#{user_id})
+    </insert>
+
+
+    <insert id="createProductForLine" statementType="CALLABLE">
+        {call create_product(${line_id})}
+    </insert>
+
+
+    <select id="existVariableByLine" resultType="int">
+
+       SELECT count(variable_id) FROM product_line_feature WHERE line_id=#{line_id} and variable_id=#{variable_id};
+
+    </select>
+
+    <select id="getByCharacteristics" resultMap="ProductResultMap">
+        SELECT id, `create`, `update`, code, `description`, rated_speed, measure_per_unit
+        from ${table} where
+        deleted = 0 and
+        <foreach  collection="characteristics" index="key" item="value"  open=""  separator=" and "  close="">
+            cast(`${key.id}` as decimal)= cast(#{value} as decimal)
+        </foreach>
+    </select>
+
+    <select id="getIndexData" resultType="Value">
+        select a.id as x, ${column} as y from ${data_table} a left join
+        ${product_table} b on
+        <foreach collection="variables" item="variable" separator=" and ">
+            CONVERT(a.`${variable.id}` using utf8) = CONVERT(b.`${variable.id}` using utf8)
+        </foreach>
+        where unix_timestamp(a.`create`) >= unix_timestamp(cast(#{start_date} as datetime))
+        and unix_timestamp(cast(#{end_date} as datetime)) >unix_timestamp(a.`create`);
+    </select>
+
+    <select id="getFeatureByLine" resultType="pe.mm.reception.core.dto.ProductFeatureDTO">
+
+      	select distinct v.name,v.id from legend lg
+		inner join 	variable_continuing vc on
+        lg.variable_id=vc.id_variable
+        inner join variable v on
+         vc.id_variable=v.id
+         where line_id=#{line_id};
+
+    </select>
+
+    <select id="getFeatureAddByLine" resultType="pe.mm.reception.core.dto.ProductFeatureDTO">
+
+        select lf.variable_id as id,v.name from product_line_feature lf
+		inner join 	variable_continuing vc on
+        lf.variable_id=vc.id_variable
+        inner join variable v on
+         vc.id_variable=v.id
+         where lf.line_id=#{line_id};
+
+    </select>
+
+    <update id="updateFeatureByProduct" statementType="STATEMENT">
+        {call create_product(${line_id})}
+    </update>
+
+    <update id="updateTableByLine" parameterType="String">
+
+       alter table `${table_name}` add (`${column_name}` varchar(15) );
+
+    </update>
+
+    <select id="getVarContinByLine" resultType="pe.mm.reception.core.dto.ProductFeatureDTO">
+      select v.name,v.id from  variable_continuing vc
+          inner join variable v on
+          vc.id_variable=v.id
+          where line_id=#{line_id};
+    </select>
+
+    <update id="updateBatchByLine" parameterType="String">
+
+        UPDATE `line`
+          SET `batch_time_variable`=#{variable_id},`update`=now(),`user_id_mod`=#{user_id}
+        WHERE `id`=#{line_id}
+
+    </update>
+
+    <insert
+            id="insertReg"
+            parameterType="pe.mm.reception.core.dto.ProductPropertyDTO"
+            statementType="PREPARED"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+    >
+        INSERT INTO ${table} ${columns}
+        VALUES     ${values}
+    </insert
+    >
+
+    <update id="updateRegisterProduct" parameterType="pe.mm.reception.core.dto.ProductPropertyDTO">
+
+        UPDATE ${table}
+        SET `code`=#{product.code},`description`=#{product.description} ,${ColumnasDynamic},  `update`=now(),`user_id`=#{user_id}
+        WHERE `id`=#{product.id}
+
+    </update>
+
+    <select id="getProductFeatureById" resultType="hashmap">
+        SELECT *
+        from ${table_name} where deleted = 0 and id=#{idProduct}
+    </select>
+    <!--
+    <select id="nameColumnsTable" resultType="Value">
+        SHOW COLUMNS FROM ${table_name};
+    </select>
+    -->
+    <update id="softDelete" >
+
+        UPDATE ${table_name}
+        SET `deleted`= 2, `update`=now(),`user_id`=#{user_id}
+        WHERE `id`=#{idProduct}
+
+    </update>
+
+    <select id="getProductDefaultByLine" resultMap="ProductResultMap">
+        SELECT product.id, product.`create`, product.`update`, product.code,
+            product.`description`, product.rated_speed, product.measure_per_unit
+        from ${table_name} as product inner join line on product.id = line.product_id where
+        product.deleted = 0 and line.id = #{line_id}
+    </select>
+    <select id="getProductFeatureDefaultByLine" resultType="hashmap">
+        SELECT product.*
+        from ${table_name} as product inner join line on product.id = line.product_id where
+        product.deleted = 0 and line.id = #{line_id}
+    </select>
+
+</mapper>

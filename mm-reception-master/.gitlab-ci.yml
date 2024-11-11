@@ -1,0 +1,67 @@
+image: registry.gitlab.com/mentor-team/mm-microservice/mm-reception/builder:latest
+
+variables:
+  DOCKER_DRIVER: overlay2
+services:
+- docker:dind
+
+stages:
+  - build
+  - package
+  - deploy
+
+build:
+  stage: build
+  cache:
+    paths:
+      - ~/.m2/repository
+      - target
+  artifacts:
+    paths:
+      - app.jar
+  script:
+    - rm src/main/resources/application.properties
+    - cp src/main/resources/application-ci.yml src/main/resources/application.yml
+    - mvn clean package -Dmaven.test.skip=true
+    - cp target/*.jar app.jar
+
+package:
+  stage: package
+  script:    
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_IMAGE
+    - docker build -t "$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_PIPELINE_ID" .
+    - docker push "$CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_PIPELINE_ID"
+
+deploy:
+  stage: deploy
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME:$CI_PIPELINE_ID
+    DOCKER_STACK: reception
+    PLACEMENT: none
+  before_script:
+    - |
+      if [ "$CI_COMMIT_REF_NAME" == "master" ]; then
+         PLACEMENT="$PLACEMENT_PRODUCTION"
+      else
+         PLACEMENT="$PLACEMENT_TEST"
+      fi
+    - echo "PLACEMENT:" "$PLACEMENT"
+    - export SSH_HOST="$(eval echo "$(echo "\$SSH_HOST_"$CI_COMMIT_REF_NAME)")"
+    - export SSH_USER="$(eval echo "$(echo "\$SSH_USER_"$CI_COMMIT_REF_NAME)")"
+    - export DOCKER_HOST="$(eval echo "ssh://$SSH_USER@$SSH_HOST")"
+    - export ENV_FILE="$(eval echo ".env.$CI_COMMIT_REF_NAME")"
+    - IFSBAK=$IFS
+    - IFS=" "
+    - export SSH_KEY="$(eval echo "$(echo "\$SSH_KEY_"$CI_COMMIT_REF_NAME)")"
+    - eval $(ssh-agent -s)
+    - echo "$SSH_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - IFS=$IFSBAK
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo $SSH_HOST
+    - ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  script:
+    - docker login -u mcalle1 -p $REGISTRY_TOKEN $CI_REGISTRY_IMAGE
+    - docker stack deploy --with-registry-auth -c docker-compose.yml $DOCKER_STACK

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.BatchMapper'>
+    <resultMap id="BatchResultMap" type="Batch">
+        <id column="id" property="id" />
+        <result column="started" property="started"/>
+        <result column="ended" property="ended"/>
+        <result column="description" property="description"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="line" javaType="Line">
+            <id column="line_id" property="id"/>
+        </association>
+    </resultMap>
+
+    <select id="getById" resultMap="BatchResultMap">
+        select id, line_id, started, ended, `create`, `update`, description from batch where id = #{batch_id} and deleted = 0
+    </select>
+
+    <select id="getAllByLineDateRange" resultMap="BatchResultMap">
+        SELECT id, line_id, started, ended, `create`, `update`, description from batch
+        where line_id = #{line_id} and
+            (
+              (`started` BETWEEN  #{start} and #{end}) or
+              (ended BETWEEN  #{start} and #{end})
+            ) and
+            `deleted` = 0
+        order by `started` asc
+    </select>
+
+    <select id="getAllByLineDateRangeWithEndNull" resultMap="BatchResultMap">
+        SELECT id, line_id, started, ended, `create`, `update`, description from batch
+        where line_id = #{line_id} and
+            (
+              (`started` >=  #{start} and (#{end} >= `started` or #{end} is null  )) or
+              (`ended` >=  #{start} and (#{end} >= `ended` or #{end} is null  ) ) or
+              (`ended`  is null and   #{start}  >= `started`) or
+              (  #{start} >= `started` and (`ended` >= #{end}  or `ended` is null  ))
+            ) and
+            `deleted` = 0
+        order by `started` asc
+    </select>
+
+    <insert id="insert"
+            statementType="PREPARED"
+            keyProperty="batch.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id">
+        insert into batch (line_id, started, ended, `create`, `user_id_mod`, `description`) VALUES
+        (#{batch.line.id}, #{batch.started}, #{batch.ended}, now(), #{user_id}, #{batch.description})
+    </insert>
+
+    <update id="update">
+        update batch set line_id = #{batch.line.id}, started = #{batch.started}, ended = #{batch.ended},
+        `update` = now(), user_id_mod = #{user_id}, description = #{batch.description} where id = #{batch.id}
+    </update>
+
+    <update id="softDeleted">
+        UPDATE batch
+        SET deleted=#{delete}, user_id_mod = #{user_id}, `update` = now()
+        WHERE id = #{batch_id}
+    </update>
+
+</mapper>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.PagerMapper'>
+    <select id="countPerTable" resultType="int">
+        SELECT count(*)
+        from ${table_name}
+        <if test="field!=null">
+            where ${field} = #{value} and deleted = 0
+        </if>
+        ;
+    </select>
+
+
+    <sql id="limit">
+        <if test="startIndex!=null and sizePage !=null">
+            LIMIT ${startIndex}, ${sizePage}
+        </if>
+    </sql>
+
+
+</mapper>

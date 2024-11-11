@@ -1,0 +1,694 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.VariableMapper'>
+    <resultMap id="VariableResultMap" type="Variable">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="type" property="type"/>
+        <result column="status" property="status"/>
+        <result column="variable_type_id" property="genericType"/>
+        <result column="standar_id" property="standar"/>
+        <association property="device" javaType="Device" column="device_id"
+                     select="pe.mm.reception.core.mapper.DeviceMapper.getById"/>
+    </resultMap>
+    <resultMap id="VariableResultMapOee" type="VariableOee">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="type" property="type"/>
+        <result column="status" property="status"/>
+        <result column="standar_id" property="standar"/>
+        <association property="graphicVariable" javaType="GraphicVariable">
+            <id column="setting" property="setting"></id>
+        </association>
+    </resultMap>
+
+    <resultMap id="VariableOnlyResultMap" type="Variable">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="type" property="type"/>
+        <result column="status" property="status"/>
+        <association property="device" javaType="Device">
+            <id column="device_id" property="id"></id>
+        </association>
+    </resultMap>
+    <resultMap id="VariableByTypeResultMap" type="Variable">
+        <id column="idVariable" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="type" property="type"/>
+        <result column="related_id" property="related"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <resultMap id="VariableContinuingResultMap" type="VariableContinuing">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="status" property="status"/>
+        <result column="column_name" property="column"/>
+        <result column="files_id" property="idFile"/>
+        <result column="related_id" property="relatedIdVariable"/>
+        <association property="device" javaType="Device" column="device_id"
+                     select="pe.mm.reception.core.mapper.DeviceMapper.getById"/>
+    </resultMap>
+
+    <resultMap id="VariableContinuingOnlyResultMap" type="VariableContinuing">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="status" property="status"/>
+        <result column="column_name" property="column"/>
+        <result column="files_id" property="idFile"/>
+        <result column="variable_type_id" property="genericType"/>
+        <result column="related_id" property="relatedIdVariable"/>
+        <association property="device" javaType="Device">
+            <id column="device_id" property="id"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="VariableDerivedResultMap" type="VariableDerived">
+        <id column="id_variable" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="formula" property="formula"/>
+        <result column="status" property="status"/>
+        <result column="files_id" property="idFile"/>
+        <result column="variable_type_id" property="genericType"/>
+
+        <result column="related_id" property="relatedIdVariable"/>
+
+        <association property="device" javaType="Device" column="device_id"
+                     select="pe.mm.reception.core.mapper.DeviceMapper.getById"/>
+        <association property="table" javaType="TableName">
+            <id column="table_name_id" property="id"/>
+            <result column="table_name_name" property="name"/>
+            <result column="table_name_parent_1" property="parent1"/>
+            <result column="table_name_parent_2" property="parent2"/>
+            <result column="table_name_index" property="index"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="VariableDerivedOnlyResultMap" type="VariableDerived">
+        <id column="id_variable" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="formula" property="formula"/>
+        <result column="status" property="status"/>
+        <result column="files_id" property="idFile"/>
+        <result column="variable_type_id" property="genericType"/>
+        <result column="related_id" property="relatedIdVariable"/>
+
+        <association property="device" javaType="Device">
+            <id column="device_id" property="id"/>
+        </association>
+        <association property="table" javaType="TableName">
+            <id column="table_name_id" property="id"/>
+            <result column="table_name_name" property="name"/>
+            <result column="table_name_parent_1" property="parent1"/>
+            <result column="table_name_parent_2" property="parent2"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="VariableFixedResultMap" type="VariableFixed">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="value" property="value"/>
+        <result column="status" property="status"/>
+        <association property="device" javaType="Device" column="device_id"
+                     select="pe.mm.reception.core.mapper.DeviceMapper.getById"/>
+    </resultMap>
+
+    <resultMap id="VariableFixedOnlyResultMap" type="VariableFixed">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="value" property="value"/>
+        <result column="status" property="status"/>
+        <result column="variable_type_id" property="genericType"/>
+        <result column="related_id" property="relatedIdVariable"/>
+        <association property="device" javaType="Device" >
+            <id column="device_id" property="id"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="VariableTreeOnlyResultMap" type="Variable">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="type" property="type"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="related_id" property="related"/>
+        <result column="status" property="status"/>
+        <association property="device" javaType="Device">
+            <id column="device_id" property="id"/>
+            <association property="location" javaType="Location">
+                <id column="location_id" property="id"/>
+                <association property="line" javaType="Line">
+                    <id column="line_id" property="id"/>
+                    <association property="plant" javaType="Plant">
+                        <id column="plant_id" property="id"/>
+                        <association property="userCompany" javaType="UserCompany">
+                            <id column="user_company_id" property="id"/>
+                        </association>
+                    </association>
+                </association>
+            </association>
+        </association>
+    </resultMap>
+
+    <resultMap id="VariableContinuingTreeOnlyResultMap" type="VariableContinuing">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="type" property="type"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="status" property="status"/>
+        <result column="files_id" property="idFile"/>
+        <result column="column_name" property="column"/>
+        <association property="device" javaType="Device">
+            <id column="device_id" property="id"/>
+            <association property="location" javaType="Location">
+                <id column="location_id" property="id"/>
+                <association property="line" javaType="Line">
+                    <id column="line_id" property="id"/>
+                    <association property="plant" javaType="Plant">
+                        <id column="plant_id" property="id"/>
+                        <association property="userCompany" javaType="UserCompany">
+                            <id column="user_company_id" property="id"/>
+                        </association>
+                    </association>
+                </association>
+            </association>
+        </association>
+    </resultMap>
+
+    <resultMap id="VariableDerivedTreeOnlyResultMap" type="VariableDerived">
+        <id column="id_variable" property="id" />
+        <result column="name" property="name"/>
+        <result column="unit" property="unit"/>
+        <result column="type" property="type"/>
+        <result column="short_name" property="shortName"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="formula" property="formula"/>
+        <result column="status" property="status"/>
+        <result column="files_id" property="idFile"/>
+        <association property="device" javaType="Device">
+            <id column="device_id" property="id"/>
+            <association property="location" javaType="Location">
+                <id column="location_id" property="id"/>
+                <association property="line" javaType="Line">
+                    <id column="line_id" property="id"/>
+                    <association property="plant" javaType="Plant">
+                        <id column="plant_id" property="id"/>
+                        <association property="userCompany" javaType="UserCompany">
+                            <id column="user_company_id" property="id"/>
+                        </association>
+                    </association>
+                </association>
+            </association>
+        </association>
+        <association property="table" javaType="TableName">
+            <id column="table_name_id" property="id"/>
+            <result column="table_name_name" property="name"/>
+            <result column="table_name_parent_1" property="parent1"/>
+            <result column="table_name_parent_2" property="parent2"/>
+            <result column="table_name_index" property="index"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="MemoryForVariableMixedMap" type="MemoryForVariablesMixed">
+        <id column="table_name_id" property="idTableName"/>
+        <association property="tableName" javaType="TableName">
+            <id column="table_name_id" property="id"/>
+            <result column="table_name_name" property="name"/>
+            <result column="table_name_parent_1" property="parent1"/>
+            <result column="table_name_parent_2" property="parent2"/>
+            <result column="table_name_index" property="index"/>
+        </association>
+        <collection property="deriveds" ofType="VariableDerived">
+            <id column="id_variable" property="id" />
+            <result column="name" property="name"/>
+            <result column="unit" property="unit"/>
+            <result column="short_name" property="shortName"/>
+            <result column="create" property="create"/>
+            <result column="update" property="update"/>
+            <result column="formula" property="formula"/>
+            <result column="status" property="status"/>
+            <result column="files_id" property="idFile"/>
+            <association property="device" javaType="Device">
+                <id column="device_id" property="id"/>
+                <association property="location" javaType="Location">
+                    <id column="location_id" property="id"/>
+                    <association property="line" javaType="Line">
+                        <id column="line_id" property="id"/>
+                        <association property="plant" javaType="Plant">
+                            <id column="plant_id" property="id"/>
+                            <association property="userCompany" javaType="UserCompany">
+                                <id column="user_company_id" property="id"/>
+                            </association>
+                        </association>
+                    </association>
+                </association>
+            </association>
+            <association property="table" javaType="TableName">
+                <id column="table_name_id" property="id"/>
+                <result column="table_name_name" property="name"/>
+                <result column="table_name_parent_1" property="parent1"/>
+                <result column="table_name_parent_2" property="parent2"/>
+            </association>
+        </collection>
+
+    </resultMap>
+    <sql id="sqlForType">
+      select id, '${@pe.mm.reception.core.model.Variable@TYPE_CONTINUING}' as type from variable inner join variable_continuing on variable.id = variable_continuing.id_variable
+            union
+            select id, '${@pe.mm.reception.core.model.Variable@TYPE_DERIVED}' from variable inner join variable_derived on variable.id = variable_derived.id_variable
+            union
+            select id, '${@pe.mm.reception.core.model.Variable@TYPE_FIXED}' from variable inner join variable_fixed on variable.id = variable_fixed.id_variable
+    </sql>
+
+    <select id="getAll" resultMap="VariableResultMap">
+        SELECT variable.`id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`, `type`
+        FROM `variable` inner join
+        (
+        <include refid="sqlForType"></include>
+        ) as type_variable
+        on variable.id = type_variable.id
+        WHERE user_company_id=#{user_company_id} and deleted =0
+    </select>
+
+    <select id="getAllByPlant" resultMap="VariableResultMap">
+        SELECT variable.`id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`, `type`
+        FROM `variable` inner join
+        (
+        <include refid="sqlForType"></include>
+        ) as type_variable
+        on variable.id = type_variable.id
+        WHERE plant_id=#{plant_id} and deleted =0
+    </select>
+
+    <select id="getAllByDevice" resultMap="VariableOnlyResultMap">
+        SELECT variable.`id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`, `type`
+        FROM `variable` inner join
+        (
+        <include refid="sqlForType"></include>
+        ) as type_variable
+        on variable.id = type_variable.id
+        WHERE device_id=#{device_id} and deleted = 0
+    </select>
+
+    <select id="getAllContinuing" resultMap="VariableContinuingResultMap">
+        SELECT `id_variable`, `id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`
+        , files_id, `column_name`, '${@pe.mm.reception.core.model.Variable@TYPE_CONTINUING}' as type
+        FROM `variable_continuing`
+            inner join variable on variable_continuing.id_variable = variable.id
+        WHERE user_company_id=#{user_company_id} and deleted = 0
+    </select>
+
+    <select id="getAllContinuingByDevice" resultMap="VariableContinuingOnlyResultMap">
+        SELECT `id_variable`,
+        `id`, `name`,  `unit`,`status`, `short_name`, `create`, `update`, `device_id`,variable.`variable_type_id`,variable.`related_id`,
+        files_id, `column_name`, `files_id`
+        FROM `variable_continuing`
+        inner join variable on variable_continuing.id_variable = variable.id
+        WHERE
+        `device_id` = #{device_id} and deleted=0
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+    <select id="getAllContinuingByFile" resultMap="VariableContinuingTreeOnlyResultMap">
+        SELECT `id_variable`, files_id,
+        variable.`id`, variable.`name`, variable.`variable_type_id`, variable.`unit`,variable.`status`, variable.`short_name`, variable.`create`, variable.`update`, variable.`device_id`
+        , variable.location_id, variable.line_id, variable.plant_id, variable.user_company_id, `column_name`,files_id
+        FROM `variable_continuing`
+        inner join variable on variable_continuing.id_variable = variable.id
+        inner join files on  variable_continuing.files_id = files.id
+        inner join user_company on variable.user_company_id = user_company.id
+        inner join plant on variable.plant_id = plant.id
+        inner join line on variable.line_id = line.id
+        inner join location on variable.location_id = location.id
+        inner join device on variable.device_id = device.id
+        WHERE
+        files.name = #{file} and variable.deleted=0 and (variable.status =1 or variable.status =3)
+        and user_company.deleted = 0
+        and plant.deleted = 0
+        and line.deleted = 0
+        and location.deleted = 0
+        and device.deleted = 0
+        order by column_name
+    </select>
+
+
+    <select id="getAllDerived" resultMap="VariableDerivedResultMap">
+        SELECT `id_variable`, `formula`, `files_id`, `table_name_id`,
+        variable.`name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`,
+        `table_name`.name as table_name_name, parent_1 table_name_parent_1, parent_2 table_name_parent_2,
+        `table_name`.index table_name_index
+        FROM `variable_derived`
+        inner join variable on variable_derived.id_variable = variable.id
+        left join `table_name` on `table_name`.id = table_name_id
+        WHERE user_company_id=#{user_company_id} and deleted = 0
+    </select>
+
+    <!-- TODO: añadir los atributos, related y tipo de variable-->
+
+    <select id="getAllDerivedByLineFile" resultMap="VariableDerivedResultMap">
+        SELECT `id_variable`, `formula`, `files_id`, table_name_id,
+        variable.`name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`,
+        `table_name`.name as table_name_name, parent_1 table_name_parent_1, parent_2 table_name_parent_2,
+        `table_name`.index table_name_index,
+
+        variable.related_id, variable.variable_type_id
+
+        FROM `variable_derived`
+        inner join variable on variable_derived.id_variable = variable.id
+        left join `table_name` on `table_name`.id = table_name_id
+        WHERE line_id = #{variable_id} and files_id = #{file_id} and deleted = 0 and variable.status=1
+    </select>
+
+    <select id="getAllDerivedByLinewithoutFile" resultMap="VariableDerivedResultMap">
+        SELECT `id_variable`, `formula`, `files_id`, table_name_id,
+        variable.`name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`,
+        `table_name`.name as table_name_name, parent_1 table_name_parent_1, parent_2 table_name_parent_2,
+        `table_name`.index table_name_index
+        FROM `variable_derived`
+        inner join variable on variable_derived.id_variable = variable.id
+        left join `table_name` on `table_name`.id = table_name_id
+        WHERE line_id = #{line_id} and files_id is null and deleted = 0 and variable.status=1
+    </select>
+
+    <select id="getAllDerivedByPlant" resultMap="VariableDerivedTreeOnlyResultMap">
+        SELECT `id_variable`, `formula`, `files_id`, table_name_id,
+        variable.`name`, `status`, `unit`, `short_name`, `create`, `update`, variable.`device_id`,
+        variable.location_id, variable.line_id, variable.plant_id, variable.user_company_id,
+        `table_name`.name as table_name_name, parent_1 table_name_parent_1, parent_2 table_name_parent_2,
+        `table_name`.index table_name_index
+        FROM `variable_derived`
+        inner join variable on variable_derived.id_variable = variable.id
+        left join `table_name` on `table_name`.id = table_name_id
+        WHERE plant_id = #{plant_id} and deleted = 0 and variable.status=1 order by variable.id ASC
+    </select>
+    <select id="getAllDerivedMixByCompany" resultMap="MemoryForVariableMixedMap">
+        SELECT `id_variable`, `formula`, `files_id`, `table_name_id`,
+  variable.`name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`,
+  variable.location_id, variable.line_id, variable.plant_id, variable.user_company_id,
+  `table_name`.name as table_name_name, parent_1 table_name_parent_1, parent_2 table_name_parent_2,
+  `table_name`.index table_name_index
+FROM `variable_derived`
+  inner join variable on variable_derived.id_variable = variable.id
+  left join `table_name` on table_name_id = `table_name`.id
+WHERE variable.user_company_id = #{user_company_id} and
+  deleted = 0 and variable.status=1 and
+  variable_derived.files_id is NULL order by table_name_id, variable.id ASC
+    </select>
+
+    <select id="getAllDerivedByDevice" resultMap="VariableDerivedOnlyResultMap">
+        SELECT `id_variable`, `formula`, `files_id`, `table_name_id`,
+        variable.`name`,variable.`variable_type_id`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`,variable.`related_id`,
+        `table_name`.name as table_name_name, parent_1 table_name_parent_1, parent_2 table_name_parent_2
+        FROM `variable_derived`
+        inner join variable on variable_derived.id_variable = variable.id
+        left join `table_name` on table_name_id = `table_name`.id
+        WHERE device_id=#{device_id} and deleted = 0
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+    <select id="getAllFixed" resultMap="VariableFixedOnlyResultMap">
+        SELECT `id_variable`, `value`,
+        `id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`
+        FROM `variable_fixed`
+        inner join variable on variable_fixed.id_variable = variable.id
+        WHERE user_company_id=#{user_company_id} and deleted = 0
+    </select>
+
+    <select id="getAllFixedByDevice" resultMap="VariableFixedOnlyResultMap">
+        SELECT `id_variable`, `value`,
+        `id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, variable.`variable_type_id`, `device_id`,variable.`related_id`
+        FROM `variable_fixed`
+        inner join variable on variable_fixed.id_variable = variable.id
+        WHERE device_id=#{device_id} and deleted = 0
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+    <select id="getById" resultMap="VariableResultMap">
+        SELECT variable.`id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`, `type`
+        FROM `variable` inner join
+        (
+        <include refid="sqlForType"></include>
+        ) as type_variable
+        on variable.id = type_variable.id
+        WHERE variable.id= #{variable_id} and deleted = 0
+    </select>
+
+    <select id="getFullById" resultMap="VariableTreeOnlyResultMap">
+        SELECT variable.`id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`, `type`, related_id
+        , location_id, line_id, plant_id, user_company_id
+        FROM `variable` inner join
+        (
+        <include refid="sqlForType"></include>
+        ) as type_variable
+        on variable.id = type_variable.id
+        WHERE variable.id= #{variable_id} and deleted = 0
+    </select>
+
+    <select id="getContinuingById" resultMap="VariableContinuingResultMap">
+        SELECT `id_variable`, `id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`, `user_company_id`,variable.`related_id`
+        , files_id, column_name
+        FROM `variable_continuing`
+            inner join variable on variable_continuing.id_variable = variable.id
+        WHERE id_variable=#{variable_id} and variable.deleted = 0
+    </select>
+
+    <select id="getDerivedById" resultMap="VariableDerivedResultMap">
+        SELECT `id_variable`, `formula`, `files_id`, `table_name_id`,
+        variable.`name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`,
+        `table_name`.name as table_name_name, parent_1 table_name_parent_1, parent_2 table_name_parent_2,
+        `table_name`.index table_name_index
+        FROM `variable_derived`
+        inner join variable on variable_derived.id_variable = variable.id
+        left join `table_name` on table_name_id = table_name.id
+        WHERE id_variable=#{variable_id} and deleted = 0
+    </select>
+
+    <select id="getFixedById" resultMap="VariableFixedResultMap">
+        SELECT `id_variable`, `value`,
+        `id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`
+        FROM `variable_fixed`
+        inner join variable on variable_fixed.id_variable = variable.id
+        WHERE id_variable=#{variable_id} and deleted = 0
+    </select>
+
+    <select id="getAllByField" resultMap="VariableOnlyResultMap">
+        SELECT variable.`id`, `name`, `status`, `unit`, `short_name`, `create`, `update`, `device_id`, `type`
+        FROM `variable` inner join
+        (
+        <include refid="sqlForType"></include>
+        ) as type_variable
+        on variable.id = type_variable.id
+        WHERE device_id=#{device_id} and
+        ${field} = #{value} and variable.deleted = 0
+    </select>
+
+    <select id="getBatchVariable" resultMap="VariableTreeOnlyResultMap">
+        SELECT variable.`id`, variable.`name`, variable.`status`, variable.`unit`, variable.`short_name`, variable.`create`,
+        variable.`update`, variable.`device_id`, type_variable.`type`, variable.location_id, variable.line_id, variable.plant_id,
+        variable.user_company_id
+        FROM `variable` inner join
+        (
+        <include refid="sqlForType"></include>
+        ) as type_variable on variable.id = type_variable.id
+        inner join line on line.batch_time_variable = variable.id
+        WHERE line.id= #{line_id} and line.deleted = 0 and variable.deleted=0
+    </select>
+
+    <insert id="insert" parameterType="Variable" statementType="PREPARED" keyProperty="variable.id"
+            useGeneratedKeys="true" timeout="20" keyColumn="id">
+        INSERT INTO `variable`(`name`, `status`, `unit`, `short_name`, `create`,
+          `device_id`, location_id, line_id, plant_id, `user_company_id`, `variable_type_id`,`related_id`, `user_id_mod`)
+        VALUES (#{variable.name},#{variable.status},#{variable.unit},#{variable.shortName},now(),#{variable.device.id},
+          #{variable.device.location.id},#{variable.device.location.line.id},#{variable.device.location.line.plant.id},
+          #{variable.device.location.line.plant.userCompany.id},#{variable.genericType},#{variable.relatedIdVariable},#{user_id})
+    </insert>
+
+    <insert id="insertContinuing" parameterType="VariableContinuing" statementType="PREPARED" timeout="20">
+        INSERT INTO `variable_continuing`(`id_variable`, `column_name`,`files_id`)
+        VALUES (#{id},#{column},#{idFile})
+    </insert>
+
+    <insert id="insertDerived" parameterType="VariableDerived" statementType="PREPARED" timeout="20">
+        INSERT INTO `variable_derived`(`id_variable`, `formula`, <if test="idFile != 0">`files_id`,</if> `table_name_id`)
+        VALUES (#{id},#{formula},<if test="idFile != 0">#{idFile},</if>#{table.id})
+    </insert>
+
+
+    <insert id="insertFixed" parameterType="VariableFixed" statementType="PREPARED" timeout="20">
+        INSERT INTO `variable_fixed`(`id_variable`, `value`)
+        VALUES (#{id},#{value})
+    </insert>
+
+    <update id="update" parameterType="Variable">
+        UPDATE `variable`
+        SET `name`=#{variable.name},`status`=#{variable.status},`unit`=#{variable.unit},`short_name`=#{variable.shortName},
+        `update`=now(),`device_id`=#{variable.device.id}, location_id =#{variable.device.location.id},
+        `line_id`=#{variable.device.location.line.id},`plant_id`=#{variable.device.location.line.plant.id},
+        `user_company_id`=#{variable.device.location.line.plant.userCompany.id}, `variable_type_id`=#{variable.genericType}, `related_id`=#{variable.relatedIdVariable}, user_id_mod = #{user_id}
+        WHERE `id`=#{variable.id}
+    </update>
+
+
+    <update id="updateDerived" parameterType="VariableDerived">
+        UPDATE `variable_derived`
+        SET `formula`=#{formula}
+        WHERE `id_variable`=#{id}
+    </update>
+
+    <update id="updateFixed" parameterType="VariableFixed">
+        UPDATE `variable_fixed`
+        SET `value`=#{value}
+        WHERE `id_variable`=#{id}
+    </update>
+
+    <update id="updateContinuing" parameterType="VariableContinuing">
+        UPDATE `variable_continuing`
+        SET `column_name` = #{column}, `files_id` = #{idFile}
+        WHERE `id_variable`=#{id}
+    </update>
+
+    <update id="softDeleted">
+        UPDATE `variable`
+        SET `deleted`=#{deleted},`user_id_mod`=#{user_id}, `update` = now()
+        WHERE `id`=#{variable_id}
+    </update>
+
+    <select id="getAllByPlantLineDerived" resultMap="VariableResultMap">
+            SELECT
+              v.id as id,
+              v.name as name,
+              v.unit as unit,
+              v.short_name as short_name,
+              v.device_id as device_id,
+		  v.line_id as line_id,
+		  v.variable_type_id as variable_type_id,
+		  v.plant_id as plant_id
+            FROM `variable` v
+            inner join variable_derived vd on  v.id = vd.id_variable
+              WHERE `status`=1 and line_id= #{idLine} and plant_id= #{idPlant} and v.deleted=0
+    </select>
+    <select id="getAllByPlantLineContinuing" resultMap="VariableResultMap">
+        SELECT
+		  v.id as id,
+          v.name as name,
+		  v.unit as unit,
+		  v.short_name as short_name,
+		  v.device_id as device_id,
+		  vc.id_variable as id_continuing,
+		  v.line_id as line_id,
+		  v.variable_type_id as variable_type_id,
+		  v.plant_id as plant_id
+
+        FROM `variable` v
+        inner join variable_continuing vc on v.id =  vc.id_variable
+        WHERE (`status`=1 or `status` = 0) and line_id= #{idLine} and plant_id= #{idPlant} and v.deleted=0
+    </select>
+    <select id="getAllByPlantLineFixed" resultMap="VariableResultMap">
+        SELECT
+		  v.id as id,
+        v.name as name,
+		  v.unit as unit,
+		  v.short_name as short_name,
+		  v.device_id as device_id,
+		  vf.id_variable as id_fixed,
+		  v.line_id as line_id,
+		  v.variable_type_id as variable_type_id,
+		  v.plant_id as plant_id
+
+        FROM `variable` v
+        inner join variable_fixed vf on v.id = vf.id_variable
+        WHERE `status`=1  and line_id= #{idLine} and plant_id= #{idPlant} and v.deleted = 0
+    </select>
+
+    <select id="getAllVariablesLegendLineTime" resultMap="VariableContinuingResultMap">
+        SELECT
+        DISTINCT l.variable_id,		  v.id as id,
+          v.name as name,
+          v.short_name as short_name
+        from legend l
+        inner join variable v on l.variable_id = v.id
+        inner join variable_continuing vc on v.id = vc.id_variable
+        WHERE `status`=1  and line_id= #{idLine} and plant_id= #{idPlant} and v.deleted=0;
+    </select>
+
+    <select id="getAllByPlantCustom" resultMap="VariableResultMap">
+        SELECT
+        v.id as id,
+        v.name as name,
+        v.unit as unit,
+        v.short_name as short_name,
+        v.device_id as device_id,
+        v.line_id as line_id,
+        v.plant_id as plant_id
+        FROM `variable` v
+        WHERE `status`=1 and plant_id= #{idPlant} and variable_type_id= #{typeId} and v.deleted =0;
+    </select>
+
+    <select id="getVariablesByTypeFile" resultMap="VariableByTypeResultMap">
+        select variable_type.code, variable_type.description,v.id as idVariable,
+        v.related_id,
+        v.name as name,
+        v.unit as unit,
+        v.short_name as short_name,
+        v.device_id as device_id,
+        v.line_id as line_id,
+        v.plant_id as plant_id,
+        type.`type`
+        from variable v
+        inner join variable_type on v.variable_type_id = variable_type.id
+        inner join
+        (
+        <include refid="sqlForType"></include>
+        ) as type on v.id = type.id
+        where  v.line_id = #{idLine} and variable_type.code= #{codeType} and v.deleted = 0;
+    </select>
+
+
+</mapper>

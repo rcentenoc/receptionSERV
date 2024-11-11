@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+       Copyright 2015-2016 the original author or authors.
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+          http://www.apache.org/licenses/LICENSE-2.0
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+-->
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <typeAliases>
+        <package name="pe.mm.reception.core.model"/>
+    </typeAliases>
+    <mappers>
+
+
+        <!--
+        <mapper resource="mybatis/mappers/commitments/CommitmentsMapper.xml"/>
+        <mapper resource="mybatis/mappers/data/DataMapper.xml"/>
+        -->
+
+
+        <mapper resource="mybatis/mappers/PlantStatusMapper.xml"/>
+        <mapper resource="mybatis/mappers/TableMapper.xml"/>
+        <mapper resource="mybatis/mappers/BatchMapper.xml"/>
+        <mapper resource="mybatis/mappers/CalendaryMapper.xml"/>
+        <mapper resource="mybatis/mappers/DepletionMapper.xml"/>
+        <mapper resource="mybatis/mappers/DocumentTypeMapper.xml"/>
+        <mapper resource="mybatis/mappers/FilesMapper.xml"/>
+        <mapper resource="mybatis/mappers/ImagesMapper.xml"/>
+        <mapper resource="mybatis/mappers/LineMapper.xml"/>
+        <mapper resource="mybatis/mappers/PagerMapper.xml"/>
+        <mapper resource="mybatis/mappers/PeriodMapper.xml"/>
+        <mapper resource="mybatis/mappers/PlantMapper.xml"/>
+        <mapper resource="mybatis/mappers/ProductMapper.xml"/>
+        <mapper resource="mybatis/mappers/TariffStructureMapper.xml"/>
+        <mapper resource="mybatis/mappers/UserCompanyMapper.xml"/>
+        <mapper resource="mybatis/mappers/VariableMapper.xml"/>
+        <mapper resource="mybatis/mappers/DeviceMapper.xml"/>
+        <mapper resource="mybatis/mappers/LocationMapper.xml"/>
+<!--
+        <mapper resource="mybatis/mappers/product/DepletionMapper.xml"/>
+        <mapper resource="mybatis/mappers/product/ProductMapper.xml"/>
+
+        <mapper resource="mybatis/mappers/report/GraphicMapper.xml"/>
+        <mapper resource="mybatis/mappers/report/GraphicTimeMapper.xml"/>
+        <mapper resource="mybatis/mappers/report/GraphicTypeMapper.xml"/>
+        <mapper resource="mybatis/mappers/report/GraphicVariableMapper.xml"/>
+        <mapper resource="mybatis/mappers/report/ReportMapper.xml"/>
+
+        <mapper resource="mybatis/mappers/security/MenuMapper.xml"/>
+        <mapper resource="mybatis/mappers/security/RolMapper.xml"/>
+        <mapper resource="mybatis/mappers/security/UrlMapper.xml"/>
+
+
+        <mapper resource="mybatis/mappers/setting/AlarmMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/BatchMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/CalendaryMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/DeviceMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/FilesMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/ImagesMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/LegendMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/LineMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/LocationMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/PatterncustomMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/PatternTurnMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/PeriodMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/PlantMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/SenderMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/SentAlarmMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/TableNameMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/TariffStructureMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/TurnMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/VariableGenericMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/VariableMapper.xml"/>
+        <mapper resource="mybatis/mappers/setting/ZoneMapper.xml"/>
+
+
+
+        <mapper resource="mybatis/mappers/user/DocumentTypeMapper.xml"/>
+        <mapper resource="mybatis/mappers/user/UserCompanyMapper.xml"/>
+        <mapper resource="mybatis/mappers/user/UserCompanyTurnMapper.xml"/>
+        <mapper resource="mybatis/mappers/user/UserHasCompanyMapper.xml"/>
+        <mapper resource="mybatis/mappers/user/UserMapper.xml"/>
+        <mapper resource="mybatis/mappers/user/UserTokenRecoveryMapper.xml"/>
+
+        <mapper resource="mybatis/mappers/system/PagerMapper.xml"/>
+
+        <mapper resource="mybatis/mappers/setting/AlarmMapper.xml"/>
+        <mapper resource="mybatis/mappers/report/ReportMapper.xml"/>
+
+        <mapper resource="mybatis/mappers/batchtimeline/BatchTimeLineMapper.xml"/>
+        <mapper resource="mybatis/mappers/security/PermissionMapper.xml"/>
+        <mapper resource="mybatis/mappers/treestops/TreeStopsMapper.xml"/>
+        -->
+    </mappers>
+
+</configuration>

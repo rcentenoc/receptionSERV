@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.FilesMapper'>
+    <resultMap id="FilesResultMap" type="Files">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="second_name" property="secondName"/>
+        <result column="type" property="type"/>
+        <result column="send_frequency" property="sendFrequency"/>
+        <result column="path" property="path"/>
+        <association property="plant" javaType="Plant">
+            <id column="plant_id" property="id"></id>
+        </association>
+    </resultMap>
+
+
+
+    <select id="getAllByPlant" resultMap="FilesResultMap">
+        SELECT `id`, `name`, `create`, `update`, `send_frequency`, `second_name`, `plant_id`
+        FROM `files`
+        WHERE plant_id=#{plant_id} AND deleted=0
+    </select>
+
+    <select id="getById" resultMap="FilesResultMap">
+        SELECT `id`, `name`, `create`, `update`, `send_frequency`, `second_name`, `plant_id`
+        FROM `files`
+        WHERE id=#{file_id  } AND deleted=0
+    </select>
+
+    <select id="getListFilesByLine" resultMap="FilesResultMap">
+        select files.`id`, files.`name`, files.`create`, files.plant_id, files.`update`, files.send_frequency,
+        files.path, files.type, files.second_name
+			from line inner join line_has_file on line.id = line_has_file.line_id
+			inner join files on line_has_file.file_id = files.id
+		where files.deleted =0 and line.id = #{line_id} and line.deleted =0
+    </select>
+
+
+    <select id="getAllByCompany" resultMap="FilesResultMap">
+        SELECT DISTINCT files.`id`, files.`name`, files.`create`, files.plant_id, files.`update`, files.send_frequency,
+        files.path, files.type, files.second_name
+        FROM `files` inner join plant on files.plant_id = plant.id
+        WHERE user_company_id =#{user_company_id} AND files.deleted=0
+    </select>
+
+    <!-- insert -->
+    <insert
+            id="insert"
+            parameterType="Files"
+            statementType="PREPARED"
+            keyProperty="files.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+    >
+        INSERT INTO `files`(`name`,`second_name`, `user_id`,`plant_id`,`send_frequency`,`create`)
+        VALUES (#{files.name},#{files.secondName},#{user_id},#{files.plant.id},#{files.sendFrequency},now())
+    </insert>
+
+    <!-- update -->
+    <update id="update" parameterType="Files">
+        UPDATE `files`
+        SET `name`=#{files.name},`second_name`=#{files.secondName},`plant_id`=#{files.plant.id},`send_frequency`=#{files.sendFrequency},`update`=now(),`user_id`=#{user_id}
+        WHERE `id`=#{files.id}
+    </update>
+
+
+    <!-- delete logic -->
+    <update id="softDeleted" parameterType="Files">
+        UPDATE `files`
+        SET `deleted`=#{deleted},`user_id`=#{user_id}, `update` = now()
+        WHERE `id` = #{file_id}
+    </update>
+
+    <select id="getAllByField" resultMap="FilesResultMap">
+        SELECT files.`create`, files.plant_id, files.`update`, files.send_frequency,
+        files.path, files.type, files.second_name
+        FROM `files`
+        WHERE plant_id=#{files.plant.id} AND ${field}= #{files.name} AND deleted=0
+    </select>
+
+</mapper>

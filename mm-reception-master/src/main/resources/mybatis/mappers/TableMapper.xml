@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+        namespace='pe.mm.reception.core.mapper.TableMapper'>
+    <insert id="insert">
+        INSERT INTO `${table}`
+        <foreach item="column" collection="columns" open="("
+                 separator="," close=")">`${column}`</foreach>
+        VALUES
+        <foreach item="value" collection="values" open="("
+                 separator="," close=")">#{value}</foreach>
+        ;
+    </insert>
+
+
+    <select id="getIdByCreate" resultType="Integer">
+		select id from ${table} where date_format(`create`, '%m-%d-%Y %H:%i') =
+		date_format(#{create}, '%m-%d-%Y %H:%i');
+	</select>
+
+    <select id="getFieldByCreate" resultType="String">
+		select `${field}` from ${table} where date_format(`create`,
+		 '%m-%d-%Y %H:%i') = date_format(#{create}, '%m-%d-%Y %H:%i');
+	</select>
+
+    <select id="getFieldsByCreate" resultType="Object">
+        select
+        <foreach collection="fields" item="field" separator=",">`${item}`
+        </foreach>
+        from ${table} where date_format(`create`, '%m-%d-%Y %H:%i') =
+        date_format(#{create}, '%m-%d-%Y %H:%i');
+    </select>
+
+    <select id="getFieldByOtherField" resultType="String">
+		select `${get}` from ${table} where `${field}` = #{value};
+	</select>
+
+    <select id="getFieldByBeforeCreate" resultType="String">
+		select `${field}` from ${table} where #{create} > `create`
+		and date_format(`create`, '%m-%d-%Y %H:%i') != date_format(#{create},
+		'%m-%d-%Y %H:%i')
+		order by `create` DESC limit 1;
+	</select>
+
+    <select id="getAllFieldByOtherField" resultType="HashMap">
+		select * from ${table} where ${field} = ${value};
+	</select>
+
+    <update id="update">
+        UPDATE ${table} set
+        <foreach collection="values" index="key" item="value" open=""
+                 separator=", " close="">
+            `${key}`=#{value}
+        </foreach>
+        WHERE `${field_id}` = #{id};
+    </update>
+
+    <update id="updateByCondition">
+        UPDATE ${table} set
+        <foreach collection="values" index="key" item="value" open=""
+                 separator=", " close="">
+            `${key}`=#{value}
+        </foreach>
+        WHERE
+        <foreach collection="comparatives" index="key" item="value"
+                 open="" separator=" " close="">
+            ${value.logical.getOperator()} `${value.field}` ${value.operator.getOperator()} #{value.value}
+        </foreach>
+    </update>
+
+    <select id="getMinFromTable" resultType="Object">
+		select min(`${field}`) from ${table};
+	</select>
+
+    <select id="getCustomDynamic" resultType="HashMap">
+        select
+        <foreach collection="fields_to_select" index="key"
+                 item="value" open="" separator=", " close="">
+            `${value}`
+        </foreach>
+        from ${table}
+        where
+        <foreach collection="comparatives" index="key" item="value"
+                 open="" separator=" " close="">
+            ${value.logical.getOperator()} `${value.field}` ${value.operator.getOperator()} #{value.value}
+        </foreach>
+        <if test="limit !=null and limit >0">
+            limit #{limit}
+        </if>
+    </select>
+
+    <select id="getDynamic" resultType="HashMap">
+        select
+        <foreach collection="fields_to_select" index="key"
+                 item="value" open="" separator=", " close="">
+            ${value}
+        </foreach>
+        from ${table}
+        where
+        <foreach collection="comparatives" index="key" item="value"
+                 open="" separator=" " close="">
+            ${value.logical.getOperator()} ${value.field} ${value.operator.getOperator()}
+            <if test="value.valueIsList">
+                <foreach collection="value.value" index="val_key" item="val_value"
+                         open="(" separator="," close=")">
+                    #{val_value}
+                </foreach>
+            </if>
+            <if test="!value.valueIsList"> #{value.value} </if>
+        </foreach>
+        <if test="orderBy != null and !orderBy.isEmpty()">
+            order by ${orderBy}
+        </if>
+        <if test="limit !=null and limit >0">
+            limit #{limit}
+        </if>
+    </select>
+
+    <select id="getDynamicVarious" resultType="HashMap">
+        select
+        <foreach collection="fields_to_select" index="key"
+                 item="value" open="" separator=", " close="">
+            ${value}
+        </foreach>
+        from
+        <foreach collection="tables" index="key"
+                 item="value" open="" separator=", " close="">
+            ${value}
+        </foreach>
+        where
+        <foreach collection="comparatives" index="key" item="value"
+                 open="" separator=" " close="">
+            ${value.logical.getOperator()} ${value.field} ${value.operator.getOperator()} #{value.value}
+        </foreach>
+        <if test="orderBy != null and !orderBy.isEmpty()">
+            order by ${orderBy}
+        </if>
+        <if test="limit !=null and limit >0">
+            limit #{limit}
+        </if>
+    </select>
+
+    <insert id="insertMultiple">
+        INSERT INTO `${table}`
+        <foreach item="column" collection="columns" open="("
+                 separator="," close=")">`${column}`</foreach>
+        VALUES
+        <foreach collection="values" item="element" index="index"
+                 open="(" separator="),(" close=")">
+            <foreach collection="element" item="value" index="index1"
+                     separator=" , ">
+                #{value}
+            </foreach>
+        </foreach>
+    </insert>
+
+    <update id="updateDerivedOperationValue">
+        UPDATE ${table_derived} as a INNER JOIN ${table_continuing} b on a.id = b.id SET
+        <foreach collection="values" index="key" item="value" open=""
+                 separator=", " close="">
+            `${key}` = ${value}
+        </foreach>
+
+        where a.id between #{min_id} AND #{max_id};
+    </update>
+
+
+    <update id="updateDerivedAcumValue">
+        UPDATE ${table1} as a INNER JOIN ${table2} b on a.id = b.id-1 SET
+        <foreach collection="values" index="key" item="value" open=""
+                 separator=", " close="">
+            `${key}` = ${value}
+        </foreach>
+        where a.id between #{min_id} AND #{max_id};
+    </update>
+
+
+    <update id="updateDerivedSpecialValue">
+        UPDATE ${table_derived} as a INNER JOIN ${table_continuing} b on a.id = b.id
+        inner join ${table_index} as i on a.id = i.data_id SET
+        <foreach collection="values" index="key" item="value" open=""
+                 separator=", " close="">
+            `${key}` = ${value}
+        </foreach>
+        where a.id between #{min_id} AND #{max_id};
+    </update>
+
+
+    <update id="updateDerivedMixOperationValue">
+        UPDATE ${table_mix} as a INNER JOIN ${parent1} b on a.id_parent1 = b.id
+        INNER JOIN ${parent2} c on a.id_parent2 = c.id SET
+        <foreach collection="values" index="key" item="value" open=""
+                 separator=", " close="">
+            `${key}` = ${value}
+        </foreach>
+
+        where a.id between #{min_id} AND #{max_id};
+    </update>
+
+    <update id="updateStop">
+        UPDATE
+        <if test="tablenameTipo != null">
+            ${tablenameTipo} as a
+            INNER JOIN
+        </if>
+        ${tablenameTiempo} as b
+        <if test="tablenameTipo != null">
+            ON a.`create` = b.`create`
+        </if>
+        INNER JOIN ${tablenameSelected} as c ON b.`create` = c.`create`
+        <if test="tablenameSelectedRelated != null">
+            INNER JOIN ${tablenameSelectedRelated} as d ON c.`create` = d.`create`
+        </if>
+        SET
+        <if test="tablenameTipo != null">
+            a.${stop.stopTypeId} = #{value},
+        </if>
+        b.${stop.stopTimeId} = #{stop.time},
+        c.${stop.variableSelectedId} = 0
+        <if test="stop.stopTimeId == stop.variableSelectedId">
+            ,c.${stop.variableSelectedId} = #{stop.time}
+        </if>
+        <if test="tablenameSelectedRelated != null and stop.stopTypeId!=selected_related.id">
+            ,d.${selected_related.id} = 0
+        </if>
+        WHERE
+        <if test="tablenameTipo != null">
+            a.`create` = #{stop.date} AND
+        </if>
+        b.`create` = #{stop.date} AND
+        c.`create` = #{stop.date}
+        <if test="tablenameSelectedRelated != null">
+            AND d.`create` = #{stop.date}
+        </if>
+    </update>
+
+</mapper>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.PeriodMapper'>
+    <resultMap id="PeriodResultMap" type="RatePeriod">
+        <id column="id" property="id"></id>
+        <result column="description" property="description"/>
+        <result column="coin" property="coin"/>
+        <result column="cost_kwh" property="cost_kwh"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="tariffStructure" javaType="TariffStructure" column="tariff_structure_id"
+                     select="pe.mm.reception.core.mapper.TariffStructureMapper.getById"/>
+        <association property="plant" javaType="Plant" column="plant_id"
+                     select="pe.mm.reception.core.mapper.PlantMapper.getById"/>
+    </resultMap>
+
+    <resultMap id="PeriodOnlyResultMap" type="RatePeriod">
+        <id column="id" property="id"></id>
+        <result column="description" property="description"/>
+        <result column="coin" property="coin"/>
+        <result column="cost_kwh" property="cost_kwh"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="tariffStructure" javaType="TariffStructure">
+            <id column="tariff_structure_id" property="id"></id>
+        </association>
+        <association property="plant" javaType="Plant">
+            <id column="plant_id" property="id"/>
+        </association>
+    </resultMap>
+
+    <select id="getAllByField" resultMap="PeriodOnlyResultMap">
+        SELECT `id`, `description`, `coin`, `cost_kwh`, `create`, `update`, `tariff_structure_id`
+        FROM `rate_period`
+        WHERE ${field} = #{value} and rate_period.deleted = 0;
+    </select>
+
+    <select id="getAllByPlant" resultMap="PeriodOnlyResultMap">
+        SELECT rate_period.`id`, rate_period.`description`, rate_period.`coin`, rate_period.`cost_kwh`,
+        rate_period.`create`, rate_period.`update`, rate_period.`tariff_structure_id`
+        FROM `rate_period` inner join tariff_structure
+          on rate_period.tariff_structure_id = tariff_structure.id
+          inner join tariff_structure_plant on tariff_structure.id = tariff_structure_plant.tariff_id
+        WHERE tariff_structure_plant.plant_id = #{plant_id} and rate_period.deleted = 0;
+    </select>
+
+
+    <select id="getAllByDescription" resultMap="PeriodOnlyResultMap">
+        SELECT `id`, `description`, `coin`, `cost_kwh`, `create`, `update`, `tariff_structure_id`
+        FROM `rate_period`
+        WHERE `description` = #{description} and `tariff_structure_id`=#{idTariff} and rate_period.deleted = 0;
+    </select>
+
+    <select id="getAllByTariff" resultMap="PeriodOnlyResultMap">
+        SELECT `id`, `description`, `coin`, `cost_kwh`, `create`, `update`, `tariff_structure_id`
+        FROM `rate_period`
+        WHERE `tariff_structure_id` = #{idTariff}  and (rate_period.deleted = 0)
+    </select>
+
+    <select id="getById" resultMap="PeriodResultMap">
+        SELECT `id`, `description`, `coin`, `cost_kwh`, `create`, `update`, `tariff_structure_id`
+        FROM `rate_period`
+        WHERE `id` = #{period_id} and rate_period.deleted = 0
+    </select>
+
+    <select id="getIdByDateRange" resultType="Integer">  <!--modificar la consulta -->
+        select rate_period_id from range_time
+        inner join rate_period on rate_period.id=range_time.rate_period_id
+        inner join tariff_structure on rate_period.tariff_structure_id= tariff_structure.id
+        inner join tariff_structure_plant on tariff_structure.id=tariff_structure_plant.tariff_id
+        where tariff_structure_plant.plant_id = #{plant_id} and rate_period.tariff_structure_id = #{tariff_structure_id}
+        and rate_period.id = range_time.rate_period_id
+        and range_time.deleted = 0
+        and #{create} >= started and ended > #{create} limit 1
+    </select>
+
+
+    <insert id="insert" statementType="PREPARED" keyProperty="rate_period.id"
+            useGeneratedKeys="true" timeout="20" keyColumn="id">
+        INSERT INTO `rate_period`(`description`, `coin`, `cost_kwh`, `create`, `user_id_mod`, tariff_structure_id,deleted)
+        VALUES (#{rate_period.description},#{rate_period.coin},#{rate_period.cost_kwh},now(),
+            #{user_id},#{rate_period.tariffStructure.id},0)
+    </insert>
+
+    <update id="update">
+        UPDATE `rate_period`
+        SET `description`=#{rate_period.description},`coin`=#{rate_period.coin},`cost_kwh`=#{rate_period.cost_kwh},
+            `update`=now(),`user_id_mod`=#{user_id}, tariff_structure_id = #{rate_period.tariffStructure.id}
+        WHERE `id`=#{rate_period.id}
+    </update>
+
+    <update id="softDeleted">
+        UPDATE `rate_period`
+        SET `deleted`=#{deleted},`user_id_mod`=#{user_id}, `update`= now()
+        WHERE `id` = #{period_id}
+    </update>
+</mapper>

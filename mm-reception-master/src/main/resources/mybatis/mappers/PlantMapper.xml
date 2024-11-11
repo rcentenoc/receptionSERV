@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.PlantMapper'>
+    <resultMap id="PlantResultMap" type="Plant">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="information" property="information"/>
+        <result column="time_zone" property="timeZone"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="userCompany" javaType="UserCompany" column="user_company_id"
+                     select="pe.mm.reception.core.mapper.UserCompanyMapper.getUserCompanyById"/>
+    </resultMap>
+
+    <resultMap id="PlantOnlyResultMap" type="Plant">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="information" property="information"/>
+        <result column="time_zone" property="timeZone"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="userCompany" javaType="UserCompany">
+            <id column="user_company_id" property="id"></id>
+        </association>
+    </resultMap>
+
+    <select id="getById" resultMap="PlantResultMap">
+        SELECT `id`, `user_company_id`, `name`, `information`, `create`, `update`, `time_zone`
+        FROM `plant`
+        WHERE plant.id=#{plant_id} AND deleted=0
+    </select>
+
+    <select id="getAllByCompany" resultMap="PlantOnlyResultMap">
+        SELECT `id`, `user_company_id`, `name`, `information`, `create`, `update`, `time_zone`
+        FROM `plant`
+        WHERE user_company_id=#{user_company_id} AND deleted=0
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+    <select id="getAllByField" resultMap="PlantOnlyResultMap">
+        SELECT `id`, `user_company_id`, `name`, `information`, `create`, `update`, `time_zone`
+        FROM `plant`
+        WHERE user_company_id=#{user_company_id} AND ${field} = #{value} AND deleted=0
+    </select>
+
+    <!-- insert -->
+    <insert
+            id="insert"
+            parameterType="Plant"
+            statementType="PREPARED"
+            keyProperty="plant.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+    >
+       INSERT INTO `plant`(`user_company_id`, `name`, `information`, `create`,`user_id_mod`, `time_zone`)
+       VALUES (#{plant.userCompany.id},#{plant.name},#{plant.information},now(),#{user_id},#{plant.timeZone})
+    </insert>
+
+    <!-- update -->
+    <update id="update" parameterType="Plant">
+        UPDATE `plant`
+        SET `user_company_id`=#{plant.userCompany.id},`name`=#{plant.name},`information`=#{plant.information},
+        `update`=now(),`user_id_mod`=#{user_id}, time_zone = #{plant.timeZone}
+        WHERE `id`=#{plant.id}
+    </update>
+
+    <!-- deleted -->
+    <delete id="delete">
+        DELETE FROM `plant` WHERE `id` = #{plant_id}
+    </delete>
+    <!-- delete logic -->
+    <update id="softDeleted" parameterType="Plant">
+        UPDATE `plant`
+        SET `deleted`=#{deleted},`user_id_mod`=#{user_id}, `update` = now()
+        WHERE `id` = #{plant_id}
+    </update>
+
+
+    <insert id="createTableForPlant" statementType="CALLABLE">
+       {call create_table(${plant_id})}
+    </insert>
+
+    <select id="existNameTable" resultType="String">
+        SHOW TABLES LIKE "${nameTable}"
+    </select>
+
+</mapper>

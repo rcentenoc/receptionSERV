@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.CalendaryMapper'>
+    <resultMap id="CalendaryOnlyResultMap" type="Calendary">
+        <id column="id" property="id" />
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="started" property="started"/>
+        <result column="ended" property="ended"/>
+        <association property="ratePeriod" javaType="RatePeriod">
+            <id column="rate_period_id" property="id"></id>
+        </association>
+        <association property="turn" javaType="Turn">
+            <id column="turn_id" property="id"></id>
+            <id column="name" property="name"></id>
+        </association>
+    </resultMap>
+
+    <select id="getAllMonthByPlant" resultMap="CalendaryOnlyResultMap">
+        SELECT distinct range_time.`id`, range_time.`started`, range_time.`ended`, range_time.`create`, range_time.`update`, range_time.`rate_period_id`, range_time.`turn_id`
+        FROM `range_time`
+             INNER  join rate_period on range_time.rate_period_id = rate_period.id
+            inner join  tariff_structure on rate_period.tariff_structure_id=tariff_structure.id
+            inner join tariff_structure_plant on tariff_structure.id=tariff_structure_plant.tariff_id
+        where tariff_structure_plant.plant_id  = #{plant_id} and
+            YEAR(DATE_ADD(`range_time`.`started`, INTERVAL -1*${time_zone_diff} second )) = #{year} and
+            MONTH(DATE_ADD(`range_time`.`started`, INTERVAL -1*${time_zone_diff} second )) = #{month} AND
+            range_time.`deleted` = 0 AND
+            rate_period.deleted = 0
+        order by `range_time`.`started` asc
+    </select>
+
+
+    <select id="getAllTurnByLineDateRange" resultMap="CalendaryOnlyResultMap">
+        SELECT range_time.`id`, range_time.`started`, range_time.`ended`, range_time.`create`, range_time.`update`, range_time.`turn_id`
+        FROM `range_time`
+            INNER  join turn
+                on range_time.turn_id = turn.id
+                and turn.line_id = ${line_id}
+        where turn.line_id = #{line_id} and
+            ((
+              (`range_time`.`started` BETWEEN  #{start} and #{end}) or
+              (`range_time`.ended BETWEEN  #{start} and #{end})
+            )  or (
+              ( #{start} BETWEEN  `range_time`.`started` and `range_time`.ended  ) or
+              (#{end} BETWEEN  `range_time`.`started` and `range_time`.ended )
+            )) and
+            range_time.`deleted` = 0 AND
+            turn.deleted = 0
+        order by `range_time`.`started` asc
+    </select>
+
+    <select id="getAllByRatePeriodDateRange" resultMap="CalendaryOnlyResultMap">
+        SELECT range_time.`id`, range_time.`started`, range_time.`ended`, range_time.`create`, range_time.`update`, range_time.`rate_period_id`
+        FROM `range_time`
+        where `range_time`.`rate_period_id` = #{rate_period_id} and
+            (
+              (`range_time`.`started` BETWEEN  #{start} and #{end}) or
+              (`range_time`.ended BETWEEN  #{start} and #{end})
+            ) and
+            range_time.`deleted` = 0
+        order by `range_time`.`started` asc
+    </select>
+
+    <select id="getById" resultMap="CalendaryOnlyResultMap">
+        SELECT range_time.`id`, range_time.`started`, range_time.`ended`, range_time.`create`, range_time.`update`, range_time.`rate_period_id`, range_time.`turn_id`
+        FROM `range_time`
+        where id = #{calendary_id} AND
+            range_time.`deleted` = 0
+    </select>
+
+    <insert id="insert" statementType="PREPARED" keyProperty="calendary.id"
+            useGeneratedKeys="true" timeout="20" keyColumn="id">
+        INSERT INTO `range_time`(`started`, `ended`, `create`, `user_id_mod`, `rate_period_id`, `turn_id`)
+        VALUES (#{calendary.started}, #{calendary.ended}, now(), #{user_id}, #{calendary.ratePeriod.id},
+            #{calendary.turn.id})
+    </insert>
+
+    <update id="update">
+        UPDATE  range_time SET rate_period_id = #{calendary.ratePeriod.id}, turn_id = #{calendary.turn.id},
+        ended = #{calendary.ended}, started = #{calendary.started}, `update` = now(), user_id_mod = #{user_id}
+        where id = #{calendary.id}
+    </update>
+
+    <update id="softDeltedByMonth">
+        UPDATE range_time
+        INNER  join rate_period
+                on range_time.rate_period_id = rate_period.id
+        INNER  join tariff_structure
+                on rate_period.tariff_structure_id = tariff_structure.id
+        INNER  join tariff_structure_plant
+                on tariff_structure.id = tariff_structure_plant.tariff_id
+        INNER  join plant
+                on tariff_structure_plant.plant_id = plant.id
+        SET range_time.`update`= now(), range_time.deleted = #{deleted}, range_time.user_id_mod=#{user_id}
+         WHERE plant.id  = #{plant_id} and
+            YEAR(`range_time`.`started`) = #{year} and
+            MONTH(`range_time`.`started`) = #{month} AND
+            range_time.`deleted` = 0
+    </update>
+    <update id="softDelted">
+        UPDATE range_time
+        SET range_time.`update`= now(), range_time.deleted = #{deleted}, range_time.user_id_mod=#{user_id}
+        WHERE range_time.id = #{calendary_id}
+    </update>
+
+    <select id="getRangeTimeOEERT" resultMap="CalendaryOnlyResultMap">
+        SELECT
+        range_time.started, range_time.ended, range_time.turn_id,range_time.id
+        FROM `range_time`
+        INNER  join turn
+        on range_time.turn_id = turn.id
+        WHERE
+        turn.line_id=#{line_id}
+        and  unix_timestamp(#{end})  >=  unix_timestamp(#{start})
+    </select>
+
+    <select id="getTurnRangeTimeByDate" resultMap="CalendaryOnlyResultMap">
+        SELECT
+        range_time.started, range_time.ended, range_time.turn_id,range_time.id,turn.name
+        FROM `range_time`
+        INNER  join turn
+        on range_time.turn_id = turn.id
+        WHERE
+        turn.line_id=#{line.id} and
+         turn.deleted=0 AND
+         range_time.deleted = 0 and
+        #{date} > started  and ended >= #{date}
+    LIMIT 1;
+    </select>
+
+</mapper>

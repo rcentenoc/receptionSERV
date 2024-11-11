@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.LineMapper'>
+    <resultMap id="LineResultMap" type="Line">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="information" property="information"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <result column="line_code" property="lineCode"/>
+        <result column="status_tables" property="statusTables"/>
+        <result column="status_product" property="statusProduct"/>
+        <result column="type" property="type"/>
+        <association property="plant" javaType="Plant" column="plant_id"
+                     select="pe.mm.reception.core.mapper.PlantMapper.getById"/>
+    </resultMap>
+
+    <resultMap id="LineOnlyResultMap" type="Line">
+        <id column="id" property="id" />
+        <result column="nameLine" property="name"/>
+        <result column="information" property="information"/>
+        <result column="create_" property="create"/>
+        <result column="type_" property="type"/>
+        <result column="update_" property="update"/>
+        <result column="line_code" property="lineCode"/>
+        <result column="status_tables" property="statusTables"/>
+        <result column="status_product" property="statusProduct"/>
+        <association property="plant" javaType="Plant">
+            <id column="plant_id" property="id"></id>
+        </association>
+    </resultMap>
+
+    <select id="getById" resultMap="LineResultMap">
+        SELECT `id`, `plant_id`, `name`, `information`, `create`, `update`, `type`, line_code,status_tables,status_product
+        FROM `line`
+        WHERE line.id=#{line_id} AND deleted=0
+    </select>
+
+    <select id="getAllByPlant" resultMap="LineResultMap">
+        SELECT `id`, `plant_id`, `name`, `information`, `create`, `update`, `type`, line_code,status_tables,status_product
+        FROM `line`
+        WHERE  deleted=0 and `plant_id`=#{plant_id}
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+    <select id="getAllByField" resultMap="LineOnlyResultMap">
+        SELECT
+        L.id as id,
+        L.plant_id as plant_id,
+        L.name as nameLine,
+        L.information as information,
+        L.create as create_,
+        L.update as update_,
+        L.type as type_,
+        L.line_code as line_code,
+        L.status_tables as status_tables,
+        L.status_product as status_product,
+        T.id as turn_id
+        FROM line L
+        left outer join turn T on  L.id = T.line_id
+        WHERE L.plant_id=#{plant_id} AND L.deleted=0  AND L.`${field}` = #{value}
+
+    </select>
+    <select id="getAllByDefault" resultMap="LineResultMap">
+        SELECT `id`, `plant_id`, `name`, `information`, `create`, `update`, `type`, line_code,status_tables,status_product
+        FROM `line`
+        WHERE  deleted=0 and `plant_id`=#{plant_id}
+
+    </select>
+
+    <!-- insert -->
+    <insert
+            id="insert"
+            parameterType="Line"
+            statementType="PREPARED"
+            keyProperty="line.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+    >
+        INSERT INTO `line`(`plant_id`, `name`, `information`, `create`,`user_id_mod`,`line_code`,`status_tables`,`type`)
+        VALUES (#{line.plant.id},#{line.name},#{line.information},now(),#{user_id},#{line.lineCode},0,#{line.type})
+    </insert>
+
+    <!-- update -->
+    <update id="update" parameterType="Line">
+        UPDATE `line`
+        SET `plant_id`=#{line.plant.id},`name`=#{line.name},`information`=#{line.information},`update`=now(),`user_id_mod`=#{user_id},`type`=#{line.type}
+        WHERE `id`=#{line.id}
+    </update>
+
+    <!-- deleted -->
+    <delete id="delete">
+        DELETE FROM `line` WHERE `id` = #{line_id}
+    </delete>
+
+    <!-- delete logic -->
+    <update id="softDeleted" parameterType="Line">
+        UPDATE `line`
+        SET `deleted`=#{deleted},`user_id_mod`=#{user_id}, `update` = now()
+        WHERE `id` = #{line_id}
+    </update>
+
+    <insert id="createTrigger" >
+        CREATE TRIGGER `tgr_insert_index_${combination}` AFTER INSERT ON `data_${combination}`
+        FOR EACH ROW
+        BEGIN
+        SET @INC = (select rate_period_id from range_time
+                inner join rate_period on rate_period.plant_id = ${plant_id}
+                    and rate_period.id = range_time.rate_period_id
+                where NEW.`create` >= started  and ended > NEW.`create` limit 1);
+        INSERT INTO `data_index_${combination}`(`data_id`, `rate_period_id`) VALUES (NEW.id,@INC);
+        END;
+    </insert>
+
+
+    <resultMap id="LineSimpleResultMap" type="pe.mm.reception.core.dto.LineEssentialDTO">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+    </resultMap>
+
+    <select id="getAllByPlantSimple" resultMap="LineSimpleResultMap">
+        SELECT `id`, `name`
+        FROM `line`
+        WHERE  deleted=0 and `plant_id`=#{plant_id}
+    </select>
+
+</mapper>

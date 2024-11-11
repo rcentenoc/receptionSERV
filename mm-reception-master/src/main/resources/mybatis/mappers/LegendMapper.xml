@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.LegendMapper'>
+    <resultMap id="LegendResultMap" type="Legend">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="value" property="value"/>
+        <result column="description" property="description"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="variableContinuing" javaType="VariableContinuing" column="variable_id"
+                     select="pe.mm.reception.core.mapper.VariableMapper.getContinuingById"/>
+    </resultMap>
+
+    <resultMap id="LegendOnlyResultMap" type="Legend">
+        <id column="id" property="id" />
+        <result column="name" property="name"/>
+        <result column="value" property="value"/>
+        <result column="description" property="description"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="variableContinuing" javaType="VariableContinuing">
+            <id column="variable_id" property="id"></id>
+        </association>
+    </resultMap>
+
+    <select id="getAllByVariable" resultMap="LegendOnlyResultMap">
+        SELECT `id`, `unique_code`, `value`, `name`, `description`, `variable_id`, `deleted`,
+        `user_id_mod`, `create`, `update`
+        FROM `legend`
+        WHERE `variable_id` = #{variable_id} and deleted = 0
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+    <select id="getById" resultMap="LegendResultMap">
+        SELECT `id`, `unique_code`, `value`, `name`, `description`, `variable_id`, `deleted`,
+        `user_id_mod`, `create`, `update`
+        FROM `legend`
+        WHERE `id` = #{legend_id} and deleted = 0
+    </select>
+
+    <select id="getAllByField" resultMap="LegendOnlyResultMap">
+        SELECT `id`, `unique_code`, `value`, `name`, `description`, `variable_id`, `deleted`,
+        `user_id_mod`, `create`, `update`
+        FROM `legend`
+        WHERE variable_id=#{variable_id} and
+          ${field} = #{value} and legend.deleted = 0
+    </select>
+
+    <insert id="insert" parameterType="Legend" statementType="PREPARED" keyProperty="legend.id"
+            useGeneratedKeys="true" timeout="20" keyColumn="id">
+        INSERT INTO `legend`(`value`, `name`, `description`, `variable_id`, `user_id_mod`, `create`)
+        VALUES (#{legend.value},#{legend.name},#{legend.description},#{legend.variableContinuing.id},#{user_id},now());
+    </insert>
+
+    <update id="update">
+        UPDATE `legend`
+        SET `value`=#{legend.value},`name`=#{legend.name},`description`=#{legend.description},
+        `variable_id`=#{legend.variableContinuing.id}, `user_id_mod`=#{user_id},`update`=now()
+        WHERE `id`=#{legend.id}
+    </update>
+
+    <update id="softDeleted">
+        UPDATE `legend`
+        SET `deleted`=#{deleted},`user_id_mod`=#{user_id}, `update`= now()
+        WHERE `id` = #{legend_id}
+    </update>
+    <select id="getByVariableandValue" resultMap="LegendOnlyResultMap">
+        SELECT `id`, `value`, `name`, `description`, `variable_id`
+        FROM `legend`
+        WHERE `variable_id` = #{variable_id} and deleted = 0 and `value` = #{value}
+    </select>
+</mapper>

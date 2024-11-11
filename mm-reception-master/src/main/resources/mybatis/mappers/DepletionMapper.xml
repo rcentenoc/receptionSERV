@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace='pe.mm.reception.core.mapper.DepletionMapper'>
+
+    <resultMap id="DepletionResultMap" type="Depletion">
+        <id column="id" property="id" />
+        <id column="calendary_id" property="calendaryId"/>
+        <result column="quantity" property="quantity"/>
+        <result column="description" property="description"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="calendary" javaType="Calendary" column="calendary_id"
+                     select="pe.mm.reception.core.mapper.CalendaryMapper.getById"/>
+    </resultMap>
+
+    <resultMap id="DepletionOnlyResultMap" type="Depletion">
+        <id column="id" property="id" />
+        <id column="calendary_id" property="calendaryId"/>
+        <result column="quantity" property="quantity"/>
+        <result column="description" property="description"/>
+        <result column="create" property="create"/>
+        <result column="update" property="update"/>
+        <association property="calendary" javaType="Calendary">
+            <id column="calendary_id" property="id"/>
+            <result column="started" property="started"/>
+            <result column="ended" property="ended"/>
+            <association property="turn" javaType="Turn">
+                <id column="turn_id" property="id"/>
+            </association>
+        </association>
+    </resultMap>
+
+
+    <select id="getAllByTurn" resultMap="DepletionOnlyResultMap">
+        SELECT depletion.`id`, depletion.`date`, depletion.`quantity`,depletion.`description`,
+        depletion.`create`, depletion.`update`,range_time.id as calendary_id,
+        range_time.started, range_time.ended
+        FROM `depletion` inner join range_time on depletion.range_time_id = range_time.id
+        WHERE turn_id=#{turn_id} and (depletion.id is null or depletion.deleted=0)
+        <include refid="pe.mm.reception.core.mapper.PagerMapper.limit"></include>
+    </select>
+
+
+    <select id="getById" resultMap="DepletionOnlyResultMap">
+        SELECT depletion.`id`, depletion.`date`, depletion.`quantity`,depletion.`description`,
+        depletion.`create`, depletion.`update`,depletion.`range_time_id` as calendary_id,
+        range_time.started, range_time.ended, range_time.turn_id
+        FROM `depletion` right join range_time on depletion.range_time_id = range_time.id
+        WHERE depletion.id=#{depletion_id} and (depletion.id is null or depletion.deleted=0)
+    </select>
+
+    <!--select id="getByLine" resultMap="DepletionOnlyResultMap">
+
+       select d.id,d.date,d.quantity,d.description,d.create,d.update,d.turn_id
+       from depletion d	inner join turn t on
+                d.turn_id=t.id
+                where t.line_id=#{line_id} and d.turn_id=#{turn_id};
+
+    </select-->
+
+    <select id="getAllByField" resultMap="DepletionOnlyResultMap">
+        SELECT depletion.`id`, depletion.`date`, depletion.`quantity`,depletion.`description`,
+        depletion.`create`, depletion.`update`,depletion.`range_time_id` as calendary_id,
+        range_time.started, range_time.ended, range_time.turn_id
+        FROM `depletion` right join range_time on depletion.range_time_id = range_time.id
+        WHERE turn_id=#{turn_id} AND depletion.${field} = #{value} AND depletion.deleted=0
+    </select>
+
+    <select id="getAllByLineRangeTime" resultMap="DepletionOnlyResultMap">
+        SELECT depletion.`id`, depletion.`date`, depletion.`quantity`,depletion.`description`,
+        depletion.`create`, depletion.`update`,depletion.`range_time_id` as calendary_id,
+        range_time.started, range_time.ended, range_time.turn_id
+        FROM `depletion`
+          right join range_time on depletion.range_time_id = range_time.id
+          inner join turn on range_time.turn_id = turn.id
+        WHERE turn.line_id=#{line_id}
+          AND unix_timestamp(range_time.started) >=  unix_timestamp(#{start})
+          and unix_timestamp(#{end}) >=  unix_timestamp(range_time.ended)
+          and (depletion.id is null or depletion.deleted=0)
+    </select>
+
+    <insert
+            id="insert"
+            parameterType="Depletion"
+            statementType="PREPARED"
+            keyProperty="depletion.id"
+            useGeneratedKeys="true"
+            timeout="20"
+            keyColumn="id"
+    >
+        INSERT INTO `depletion`(`quantity`, `description`,`create`,`user_id_mod`,`range_time_id`)
+        VALUES (#{depletion.quantity},#{depletion.description},now(),#{user_id},#{depletion.calendary.id})
+    </insert>
+
+
+    <update id="update" parameterType="Depletion">
+        UPDATE `depletion`
+        SET `quantity`=#{depletion.quantity},`description`=#{depletion.description},
+            `update`=now(),`user_id_mod`=#{user_id}, `range_time_id` = #{depletion.calendary.id}
+        WHERE `id`=#{depletion.id}
+    </update>
+
+    <select id="getByCalendary" resultMap="DepletionOnlyResultMap">
+        SELECT depletion.`id`, depletion.`date`, depletion.`quantity`,depletion.`description`,
+        depletion.`create`, depletion.`update`,depletion.`range_time_id` as calendary_id,
+        range_time.started, range_time.ended, range_time.turn_id
+        FROM `depletion` right join range_time on depletion.range_time_id = range_time.id
+        WHERE depletion.range_time_id=#{range_time.id} and (depletion.deleted=0)
+    </select>
+
+
+</mapper>

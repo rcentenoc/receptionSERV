@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace='pe.mm.reception.core.mapper.LineSessionMapper'>
+
+    <resultMap id="LineSessionResultMap" type="pe.mm.reception.core.dto.LineSessionDTO">
+            <id property="id" column="id"/>
+            <result property="id_user" column="id_user"/>
+            <result property="id_line" column="id_line"/>
+            <result property="id_role" column="id_role"/>
+            <result property="user" column="name"/>
+            <result property="role" column="description"/>
+            <result property="line" column="nameline"/>
+            <result property="date" column="created"/>
+    </resultMap>
+
+    <select id="list" resultMap="LineSessionResultMap">
+        SELECT l.id, l.id_line, l.id_role, l.id_user, l.created, u.name, r.description, x.name as nameline
+        FROM lines_session as l
+        INNER JOIN user as u ON u.id = l.id_user
+        INNER JOIN rol as r ON r.idrol = l.id_role
+        INNER JOIN line as x ON x.id = l.id_line
+        WHERE
+        <if test="idLine > 0">
+            l.id_line = #{idLine} AND
+        </if>
+        <if test="lines != null">
+            <foreach item="item" index="index" collection="lines" open="(" separator=" OR " close=")">
+                l.id_line = #{item.id}
+            </foreach>
+            AND
+        </if>
+        l.deleted = 0;
+    </select>
+
+    <select id="is_enabled" resultMap="LineSessionResultMap">
+        SELECT id, id_line, id_role, id_user
+        FROM lines_session
+        WHERE
+        id_line = #{line_id} AND deleted = 0 AND id_role = #{role_id};
+    </select>
+
+    <select id="in_session" resultMap="LineSessionResultMap">
+        SELECT id, id_line, id_role, id_user
+        FROM lines_session
+        WHERE
+        <if test="line_id != 0">
+        id_line = #{line_id} AND
+        </if>
+         deleted = 0 AND id_user = #{user_id};
+    </select>
+
+    <insert id="block" >
+        insert into lines_session (`id`,`id_line`,`id_user`,`created`,`id_role`,`user_id_mode`)
+        values
+        (null,#{line_id},#{user_id},now(), #{role_id} ,#{usermod});
+    </insert>
+
+    <resultMap id="RolResultMap" type="pe.mm.reception.core.model.Rol">
+        <id property="id" column="rol_idrol"/>
+    </resultMap>
+
+    <select id="getRol" resultMap="RolResultMap">
+        SELECT rol_idrol
+        FROM rol_has_user
+        WHERE `user_id` = #{user_id};
+    </select>
+
+    <update id="unblock" >
+        UPDATE lines_session
+        SET deleted = 2, user_id_mode = #{usermod}, updated = now()
+        WHERE
+        <if test="id == 0">
+            id_user = #{usermod}
+        </if>
+        <if test="id > 0">
+            id = #{id}
+        </if>
+        AND deleted = 0;
+
+    </update>
+
+</mapper>
